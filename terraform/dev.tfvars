@@ -11,8 +11,8 @@ mhs_inbound_service_minimum_instance_count = 1
 recipient_ods_code                  = "opentest" # Not enforced in opentest
 setup_public_dns_record = "false"
 sds_port                            = 389
-spineroutelookup_service_sds_url    = "ldap://192.168.128.11:389" # MUST BE AN IP in dev environment
-mhs_forward_reliable_endpoint_url  = "https://192.168.128.11/reliablemessaging/forwardreliable"
+spineroutelookup_service_sds_url    = "ldap://192.168.128.11:389"
+mhs_forward_reliable_endpoint_url  = "https://msg.opentest.hscic.gov.uk/reliablemessaging/forwardreliable"
 spineroutelookup_service_search_base = "ou=services,o=nhs"
 spineroutelookup_service_disable_sds_tls = "True"
 mhs_log_level                       = "DEBUG"
