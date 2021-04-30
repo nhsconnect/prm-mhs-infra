@@ -187,65 +187,12 @@ case "${command}" in
       check_env
       dojo "./tasks _tf_apply"
       ;;
-  _generate_certs)
-      check_env
-      cluster_name=$2
-      check_cluster_name $cluster_name
-      rm -rf support
-      git clone https://github.com/nhsconnect/prm-deductions-support-infra.git support
-      cd support
-      if [[ $cluster_name == "repo" ]]; then
-        domain_suffix="mhs"
-      elif [[ $cluster_name == "test_harness" ]]; then
-        domain_suffix="test-harness-mhs"
-      else
-        echo "Wrong cluster name: $cluster_name"
-      fi
-      ./utils/generate-certs.sh -f mhs-outbound.$NHS_ENVIRONMENT.$cluster_name -d "mhs-outbound-$NHS_ENVIRONMENT.$domain_suffix.patient-deductions.nhs.uk"
-      ;;
-  generate_certs)
-      cluster_name=$2
-      check_cluster_name $cluster_name
-      dojo "./tasks _generate_certs $cluster_name"
-      ;;
   _csr)
       check_env
       fqdn="mhs-inbound-$NHS_ENVIRONMENT-b86041.mhs.patient-deductions.nhs.uk"
       generate_csr "mhs-inbound-$NHS_ENVIRONMENT-b86041" $fqdn
       echo "The CSR has to be sent together with endpoint registration. Use the form below or ask endpoint admin to register it"
       echo "https://digital.nhs.uk/forms/combined-endpoint-and-service-registration-request"
-      ;;
-  _upload_certs)
-      cluster_name=$2
-      check_cluster_name $cluster_name
-      if [ "${NHS_ENVIRONMENT}" == "dev" ]; then
-        check_cluster_name $cluster_name
-        if [[ $cluster_name == "repo" ]]; then
-          outbound_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/67279db0-17f9-4517-8572-eb739ae6808b"
-        elif [[ $cluster_name == "test_harness" ]]; then
-          outbound_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/a8cc9b0f-992f-414d-b761-4c192c4e3769"
-        else
-          echo "Wrong cluster name: $cluster_name"
-          exit 5
-        fi
-      elif [ "${NHS_ENVIRONMENT}" == "test" ]; then
-        outbound_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/4289f294-49b4-4949-84ca-11cda3e84a59"
-      else
-        echo "Not supported environment: '${NHS_ENVIRONMENT}'"
-        # To add new env, just update this script. First-time upload should not include --certificate-arn option
-        exit 2
-      fi
-      aws acm import-certificate \
-        --certificate-arn $outbound_alb_certificate_arn \
-        --region $AWS_REGION \
-        --certificate file://support/utils/site-certs/mhs-outbound.$NHS_ENVIRONMENT.${cluster_name}.crt \
-        --private-key file://support/utils/site-certs/mhs-outbound.$NHS_ENVIRONMENT.${cluster_name}.key \
-        --certificate-chain file://support/utils/site-certs/ca.crt
-      ;;
-  upload_certs)
-      cluster_name=$2
-      check_cluster_name $cluster_name
-      dojo "./tasks _upload_certs $cluster_name"
       ;;
   _wait_ecs)
       cluster_name=$2

@@ -229,7 +229,7 @@ resource "aws_lb_listener" "outbound_alb_listener" {
   port = 443
   protocol = "HTTPS"
   ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn = var.outbound_alb_certificate_arn
+  certificate_arn = aws_acm_certificate.mhs_outbound_cert.arn
 
   default_action {
     type = "forward"
@@ -278,9 +278,8 @@ resource "aws_security_group" "outbound_alb" {
 }
 
 resource "aws_route53_record" "mhs_outbound_load_balancer_record" {
-  zone_id = local.mhs_route53_zone_id
-  // TODO: Word MHS is included twice in the url
-  name = "mhs-outbound-${var.environment}.${local.mhs_route53_zone_name}"
+  zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
+  name = "route.${var.cluster_suffix}"
   type = "A"
 
   alias {
@@ -293,7 +292,7 @@ resource "aws_route53_record" "mhs_outbound_load_balancer_record" {
 resource "aws_ssm_parameter" "outbound_url" {
   name = "/repo/${var.environment}/output/${var.repo_name}/${var.cluster_name}-mhs-outbound-url"
   type  = "String"
-  value = trimsuffix("https://${aws_route53_record.mhs_outbound_load_balancer_record.name}", ".")
+  value = "https://${aws_route53_record.mhs_outbound_load_balancer_record.name}.${data.aws_route53_zone.environment_private_zone.name}"
   tags = {
     Environment = var.environment
     CreatedBy = var.repo_name
@@ -363,4 +362,37 @@ locals {
       valueFrom = local.ca_certs_arn
     }
   ]
+}
+
+resource "aws_acm_certificate" "mhs_outbound_cert" {
+  domain_name       = "outbound.${var.cluster_suffix}.${data.aws_route53_zone.environment_public_zone.name}"
+
+  validation_method = "DNS"
+
+  tags = {
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_route53_record" "mhs_outbound_cert_validation_record" {
+  for_each = {
+    for dvo in aws_acm_certificate.mhs_outbound_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_ssm_parameter.environment_public_zone_id.value
+}
+
+resource "aws_acm_certificate_validation" "mhs_outbound_cert_validation" {
+  certificate_arn = aws_acm_certificate.mhs_outbound_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.mhs_outbound_cert_validation_record : record.fqdn]
 }

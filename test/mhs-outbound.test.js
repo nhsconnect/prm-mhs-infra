@@ -16,7 +16,7 @@ describe('MHS Outbound', () => {
 
     const message = testPdsRetrievalMessage(conversationId, timestamp, pdsAsid, repoAsid, nhsNumber)
 
-    const mhsOutboundUrl = `https://mhs-outbound-${config.nhsEnvironment}.mhs.patient-deductions.nhs.uk`
+    const mhsOutboundUrl = `https://outbound.mhs.${config.nhsEnvironment}.non-prod.patient-deductions.nhs.uk`
     const body = { payload: message };
     const headers = {
       headers: {

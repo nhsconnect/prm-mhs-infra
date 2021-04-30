@@ -113,10 +113,6 @@ variable "allowed_mhs_clients" {
   description = "Network from which MHS ALBs should allow connections"
 }
 
-variable "outbound_alb_certificate_arn" {
-  description = "ARN of the TLS certificate that the outbound load balancer should present. This can be a certificate stored in IAM or ACM."
-}
-
 variable "spine_cidr" {
   description = "Network where spine services are located"
 }
