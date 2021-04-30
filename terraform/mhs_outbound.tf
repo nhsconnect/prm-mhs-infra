@@ -330,7 +330,7 @@ locals {
     },
     {
       name = "MHS_SPINE_ROUTE_LOOKUP_URL"
-      value = "https://${aws_route53_record.mhs_route_load_balancer_record.name}"
+      value = "https://${aws_route53_record.mhs_route_load_balancer_record.name}.${data.aws_route53_zone.environment_private_zone.name}"
     },
     {
       name = "MHS_SPINE_ORG_CODE"

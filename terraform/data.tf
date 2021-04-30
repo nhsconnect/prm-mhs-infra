@@ -38,6 +38,10 @@ data "aws_ssm_parameter" "environment_private_zone_id" {
   name = "/repo/${var.environment}/output/prm-deductions-infra/environment-private-zone-id"
 }
 
+data "aws_route53_zone" "environment_private_zone" {
+  zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
+}
+
 data "aws_ssm_parameter" "environment_public_zone_id" {
   name = "/repo/${var.environment}/output/prm-deductions-infra/environment-public-zone-id"
 }
