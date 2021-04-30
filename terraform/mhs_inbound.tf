@@ -96,11 +96,11 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
           name = "MHS_SYNC_ASYNC_STATE_TABLE_NAME"
           value = aws_dynamodb_table.mhs_sync_async_table.name
         },
-        {
+        { # TODO: Remove when we have permanently migrated to mhs inbound
           name = "MHS_INBOUND_QUEUE_URL"
           value = "${local.inbound_queue_host}/${var.inbound_queue_name}"
         },
-        {
+        { # TODO: Remove when we have permanently migrated to mhs inbound
           name = "MHS_INBOUND_RAW_QUEUE_URL"
           value = "${local.inbound_queue_host}/${var.inbound_raw_queue_name}"
         },
@@ -115,6 +115,10 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
         {
           name = "MHS_INBOUND_QUEUE_BROKERS",
           value = local.inbound_queue_brokers
+        },
+        {
+          name = "MHS_INBOUND_QUEUE_NAME",
+          value = var.inbound_queue_name
         }
       ]
       secrets = [
