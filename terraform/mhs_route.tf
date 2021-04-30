@@ -360,7 +360,7 @@ resource "aws_acm_certificate_validation" "mhs_route_cert_validation" {
 resource "aws_ssm_parameter" "route_url" {
   name = "/repo/${var.environment}/output/${var.repo_name}/${var.cluster_name}-mhs-route-url"
   type  = "String"
-  value = trimsuffix("https://${aws_route53_record.mhs_route_load_balancer_record.name}", ".")
+  value = "https://${aws_route53_record.mhs_route_load_balancer_record.name}.${data.aws_route53_zone.environment_private_zone.name}"
   tags = {
     Environment = var.environment
     CreatedBy = var.repo_name
