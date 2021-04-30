@@ -133,7 +133,7 @@ pipelines:
         stage: build
       dev_env:
         pipeline: prm-mhs-infra-opentest
-        stage: deploy
+        stage: test
       mhs_docker:
         pipeline: prm-repo-mhs
         stage: build_docker
