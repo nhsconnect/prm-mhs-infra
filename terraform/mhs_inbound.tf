@@ -10,6 +10,14 @@ data "aws_ssm_parameter" "amqp-endpoint-active" {
   name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-active"
 }
 
+data "aws_ssm_parameter" "amqp-endpoint-0" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-0"
+}
+
+data "aws_ssm_parameter" "amqp-endpoint-1" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-1"
+}
+
 data "aws_ssm_parameter" "party-key" {
   name = "/repo/${var.environment}/user-input/${var.cluster_name}-mhs-party-key"
 }
@@ -35,7 +43,9 @@ locals {
   inbound_queue_password_arn=data.aws_ssm_parameter.mq-app-password.arn
   #FIXME: mhs-inbound limitation: should use a failover connection string with both endpoints
   inbound_queue_host=replace(data.aws_ssm_parameter.amqp-endpoint-active.value, "amqp+ssl", "amqps")
-
+  inbound_queue_broker_0=replace(data.aws_ssm_parameter.amqp-endpoint-0.value, "amqp+ssl", "amqps")
+  inbound_queue_broker_1=replace(data.aws_ssm_parameter.amqp-endpoint-1.value, "amqp+ssl", "amqps")
+  inbound_queue_brokers="${local.inbound_queue_broker_0},${local.inbound_queue_broker_1}"
   domain_suffix = "${var.environment}-${var.recipient_ods_code}"
 
   # MHS secrets to connect with spine
@@ -101,8 +111,11 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
         {
           name = "DNS_SERVER_2",
           value = local.dns_ip_address_1
+        },
+        {
+          name = "MHS_INBOUND_QUEUE_BROKERS",
+          value = local.inbound_queue_brokers
         }
-
       ]
       secrets = [
         {
