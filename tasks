@@ -277,7 +277,14 @@ case "${command}" in
         --region $AWS_DEFAULT_REGION \
         --cluster $NHS_ENVIRONMENT-$CLUSTER_NAME-mhs-outbound-cluster \
         --service $NHS_ENVIRONMENT-$CLUSTER_NAME-mhs-outbound
+
+      # Wait for inbound
+      aws ecs wait services-stable \
+        --region $AWS_DEFAULT_REGION \
+        --cluster $NHS_ENVIRONMENT-$CLUSTER_NAME-mhs-inbound-cluster \
+        --service $NHS_ENVIRONMENT-$CLUSTER_NAME-mhs-inbound
       ;;
+
   wait_ecs)
       cluster_name=$2
       check_cluster_name $cluster_name
