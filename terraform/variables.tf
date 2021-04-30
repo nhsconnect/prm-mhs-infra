@@ -113,10 +113,6 @@ variable "allowed_mhs_clients" {
   description = "Network from which MHS ALBs should allow connections"
 }
 
-variable "route_alb_certificate_arn" {
-  description = "ARN of the TLS certificate that the route load balancer should present. This can be a certificate stored in IAM or ACM."
-}
-
 variable "outbound_alb_certificate_arn" {
   description = "ARN of the TLS certificate that the outbound load balancer should present. This can be a certificate stored in IAM or ACM."
 }
@@ -126,5 +122,6 @@ variable "spine_cidr" {
 }
 
 variable "cluster_domain_name" {}
+variable "cluster_suffix" {}
 
 variable "sds_port" {}

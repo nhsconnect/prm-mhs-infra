@@ -202,7 +202,6 @@ case "${command}" in
         echo "Wrong cluster name: $cluster_name"
       fi
       ./utils/generate-certs.sh -f mhs-outbound.$NHS_ENVIRONMENT.$cluster_name -d "mhs-outbound-$NHS_ENVIRONMENT.$domain_suffix.patient-deductions.nhs.uk"
-      ./utils/generate-certs.sh -f mhs-route.$NHS_ENVIRONMENT.$cluster_name -d "mhs-route-$NHS_ENVIRONMENT.$domain_suffix.patient-deductions.nhs.uk"
       ;;
   generate_certs)
       cluster_name=$2
@@ -223,17 +222,14 @@ case "${command}" in
         check_cluster_name $cluster_name
         if [[ $cluster_name == "repo" ]]; then
           outbound_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/67279db0-17f9-4517-8572-eb739ae6808b"
-          route_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/3630471e-0ca2-4aec-a7f1-ef78258c8283"
         elif [[ $cluster_name == "test_harness" ]]; then
           outbound_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/a8cc9b0f-992f-414d-b761-4c192c4e3769"
-          route_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/6b9583b9-4bbb-4b74-981f-9d3d05b79933"
         else
           echo "Wrong cluster name: $cluster_name"
           exit 5
         fi
       elif [ "${NHS_ENVIRONMENT}" == "test" ]; then
         outbound_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/4289f294-49b4-4949-84ca-11cda3e84a59"
-        route_alb_certificate_arn="arn:aws:acm:eu-west-2:327778747031:certificate/5eed36c1-6aba-4909-be94-b50019bb57b0"
       else
         echo "Not supported environment: '${NHS_ENVIRONMENT}'"
         # To add new env, just update this script. First-time upload should not include --certificate-arn option
@@ -244,12 +240,6 @@ case "${command}" in
         --region $AWS_REGION \
         --certificate file://support/utils/site-certs/mhs-outbound.$NHS_ENVIRONMENT.${cluster_name}.crt \
         --private-key file://support/utils/site-certs/mhs-outbound.$NHS_ENVIRONMENT.${cluster_name}.key \
-        --certificate-chain file://support/utils/site-certs/ca.crt
-      aws acm import-certificate \
-        --certificate-arn $route_alb_certificate_arn \
-        --region $AWS_REGION \
-        --certificate file://support/utils/site-certs/mhs-route.$NHS_ENVIRONMENT.${cluster_name}.crt \
-        --private-key file://support/utils/site-certs/mhs-route.$NHS_ENVIRONMENT.${cluster_name}.key \
         --certificate-chain file://support/utils/site-certs/ca.crt
       ;;
   upload_certs)
