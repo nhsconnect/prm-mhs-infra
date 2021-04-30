@@ -8,7 +8,7 @@ describe('MHS Route connection', () => {
     const { repoOdsCode, repoAsid } = testData[config.nhsEnvironment];
     const serviceId = 'urn:nhs:names:services:gp2gp:RCMR_IN010000UK05';
 
-    const mhsRouteUrl = `https://mhs-route-${config.nhsEnvironment}.mhs.patient-deductions.nhs.uk`;
+    const mhsRouteUrl = `https://route.mhs.${config.nhsEnvironment}.non-prod.patient-deductions.nhs.uk`;
     const baseUrl = mhsRouteUrl.replace(/\/$/, '');
     const url = `${baseUrl}/routing`;
 
