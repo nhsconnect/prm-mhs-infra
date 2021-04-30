@@ -279,7 +279,7 @@ resource "aws_security_group" "outbound_alb" {
 
 resource "aws_route53_record" "mhs_outbound_load_balancer_record" {
   zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
-  name = "route.${var.cluster_suffix}"
+  name = "outbound.${var.cluster_suffix}"
   type = "A"
 
   alias {
