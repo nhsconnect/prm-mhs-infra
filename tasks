@@ -138,6 +138,15 @@ function get_aws_value {
   echo $json | jq -r ".Parameter.Value"
 }
 
+function configure_mhs_inbound_url {
+  check_env
+  if [[ $NHS_ENVIRONMENT == "dev" ]]; then
+    export MHS_INBOUND_URL=http://mhs-inbound-dev-opentest.mhs.patient-deductions.nhs.uk
+  else
+    export MHS_INBOUND_URL=http://mhs-inbound-test-b86041.mhs.patient-deductions.nhs.uk
+  fi
+}
+
 command="$1"
 case "${command}" in
   _test)
@@ -146,6 +155,7 @@ case "${command}" in
       ;;
   test)
       check_env
+      configure_mhs_inbound_url
       export NODE_EXTRA_CA_CERTS=certs/deductions.crt
       dojo -c Dojofile-node "./tasks _test"
       ;;
