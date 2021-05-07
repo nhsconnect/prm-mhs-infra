@@ -38,6 +38,10 @@ data "aws_ssm_parameter" "route-ca-certs" {
   name = "/repo/${var.environment}/user-input/${var.cluster_name}-mhs-route-ca-certs"
 }
 
+data "aws_ssm_parameter" "inbound-ca-certs" {
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-inbound-ca-certs"
+}
+
 locals {
   inbound_queue_username_arn=data.aws_ssm_parameter.mq-app-username.arn
   inbound_queue_password_arn=data.aws_ssm_parameter.mq-app-password.arn
@@ -54,6 +58,7 @@ locals {
   client_key_arn=data.aws_ssm_parameter.client-key.arn
   ca_certs_arn=data.aws_ssm_parameter.ca-certs.arn
   route_ca_certs_arn=data.aws_ssm_parameter.route-ca-certs.arn
+  inbound_ca_certs_arn=data.aws_ssm_parameter.inbound-ca-certs.arn
 }
 
 resource "aws_ecs_cluster" "mhs_inbound_cluster" {
@@ -144,7 +149,7 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
         },
         {
           name = "MHS_SECRET_CA_CERTS"
-          valueFrom = local.ca_certs_arn
+          valueFrom = local.inbound_ca_certs_arn
         }
       ]
       essential = true
