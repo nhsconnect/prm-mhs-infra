@@ -354,7 +354,7 @@ locals {
     },
     {
       name = "MHS_SECRET_CA_CERTS"
-      valueFrom = local.ca_certs_arn
+      valueFrom = local.outbound_ca_certs_arn
     }
   ]
 }

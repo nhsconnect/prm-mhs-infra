@@ -19,23 +19,23 @@ data "aws_ssm_parameter" "amqp-endpoint-1" {
 }
 
 data "aws_ssm_parameter" "party-key" {
-  name = "/repo/${var.environment}/user-input/${var.cluster_name}-mhs-party-key"
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-party-key"
 }
 
 data "aws_ssm_parameter" "client-cert" {
-  name = "/repo/${var.environment}/user-input/${var.cluster_name}-mhs-client-cert"
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-client-cert"
 }
 
 data "aws_ssm_parameter" "client-key" {
-  name = "/repo/${var.environment}/user-input/${var.cluster_name}-mhs-client-key"
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-client-key"
 }
 
-data "aws_ssm_parameter" "ca-certs" {
-  name = "/repo/${var.environment}/user-input/${var.cluster_name}-mhs-ca-certs"
+data "aws_ssm_parameter" "outbound-ca-certs" {
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-outbound-ca-certs"
 }
 
 data "aws_ssm_parameter" "route-ca-certs" {
-  name = "/repo/${var.environment}/user-input/${var.cluster_name}-mhs-route-ca-certs"
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-route-ca-certs"
 }
 
 data "aws_secretsmanager_secret" "inbound-ca-certs" {
@@ -56,7 +56,7 @@ locals {
   party_key_arn=data.aws_ssm_parameter.party-key.arn
   client_cert_arn=data.aws_ssm_parameter.client-cert.arn
   client_key_arn=data.aws_ssm_parameter.client-key.arn
-  ca_certs_arn=data.aws_ssm_parameter.ca-certs.arn
+  outbound_ca_certs_arn=data.aws_ssm_parameter.outbound-ca-certs.arn
   route_ca_certs_arn=data.aws_ssm_parameter.route-ca-certs.arn
   inbound_ca_certs_arn=data.aws_secretsmanager_secret.inbound-ca-certs.arn
 }
