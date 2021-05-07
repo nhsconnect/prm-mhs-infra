@@ -121,3 +121,5 @@ variable "cluster_domain_name" {}
 variable "cluster_suffix" {}
 
 variable "sds_port" {}
+
+variable "spine_org_code" {}

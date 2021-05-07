@@ -299,13 +299,8 @@ resource "aws_ssm_parameter" "outbound_url" {
   }
 }
 
-data "aws_ssm_parameter" "spine_org_code" {
-  name = "/repo/dev/user-input/opentest-spine-org-code"
-}
-
-
 locals {
-  mhs_spine_org_code   = data.aws_ssm_parameter.spine_org_code.value
+  mhs_spine_org_code   = var.spine_org_code
   mhs_outbound_base_environment_vars = [
     {
       name = "MHS_LOG_LEVEL"
