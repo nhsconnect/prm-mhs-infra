@@ -363,8 +363,8 @@ resource "aws_lb" "inbound_nlb" {
 # Public DNS record for the MHS inbound component
 resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
   count = var.setup_public_dns_record == "true" ? 1 : 0
-  zone_id = data.aws_ssm_parameter.public_root_zone_id.value
-  name = "mhs-inbound-${var.environment}-${lower(var.recipient_ods_code)}.mhs"
+  zone_id = data.aws_ssm_parameter.environment_public_zone_id.value
+  name = "inbound-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
   type = "A"
   ttl = 600
 
@@ -441,14 +441,15 @@ resource "aws_lb_listener" "inbound_http_nlb_listener" {
   }
 }
 
+// TODO: double check the name as it used to be different than the public one
 resource "aws_route53_record" "mhs_inbound_load_balancer_record" {
-  zone_id = local.mhs_route53_zone_id
-  name = "mhs-inbound-${local.domain_suffix}.${local.mhs_route53_zone_name}"
+  zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
+  name = "inbound-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
   type = "A"
 
   alias {
     name = aws_lb.inbound_nlb.dns_name
-    evaluate_target_health = false
     zone_id = aws_lb.inbound_nlb.zone_id
+    evaluate_target_health = false
   }
 }

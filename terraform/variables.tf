@@ -117,7 +117,6 @@ variable "spine_cidr" {
   description = "Network where spine services are located"
 }
 
-variable "cluster_domain_name" {}
 variable "cluster_suffix" {}
 
 variable "sds_port" {}

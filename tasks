@@ -141,9 +141,9 @@ function get_aws_value {
 function configure_mhs_inbound_url {
   check_env
   if [[ $NHS_ENVIRONMENT == "dev" ]]; then
-    export MHS_INBOUND_URL=http://mhs-inbound-dev-opentest.mhs.patient-deductions.nhs.uk
+    export MHS_INBOUND_URL=http://inbound-opentest.mhs.dev.non-prod.patient-deductions.nhs.uk
   else
-    export MHS_INBOUND_URL=http://mhs-inbound-test-b86041.mhs.patient-deductions.nhs.uk
+    export MHS_INBOUND_URL=http://inbound-b86041.mhs.test.non-prod.patient-deductions.nhs.uk
   fi
 }
 
@@ -189,8 +189,8 @@ case "${command}" in
       ;;
   _csr)
       check_env
-      fqdn="mhs-inbound-$NHS_ENVIRONMENT-b86041.mhs.patient-deductions.nhs.uk"
-      generate_csr "mhs-inbound-$NHS_ENVIRONMENT-b86041" $fqdn
+      fqdn="inbound-b86041.mhs.$NHS_ENVIRONMENT.non-prod.patient-deductions.nhs.uk"
+      generate_csr "inbound-b86041-mhs-$NHS_ENVIRONMENT" $fqdn
       echo "The CSR has to be sent together with endpoint registration. Use the form below or ask endpoint admin to register it"
       echo "https://digital.nhs.uk/forms/combined-endpoint-and-service-registration-request"
       ;;
