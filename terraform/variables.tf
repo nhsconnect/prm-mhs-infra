@@ -23,10 +23,6 @@ variable "inbound_queue_name" {
   default = "inbound"
 }
 
-variable "inbound_raw_queue_name" {
-  default = "raw-inbound"
-}
-
 variable "mhs_inbound_service_minimum_instance_count" {
   description = "The minimum number of instances of MHS inbound to run. This will be the number of instances deployed initially."
 }
