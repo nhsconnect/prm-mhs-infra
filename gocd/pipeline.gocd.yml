@@ -60,7 +60,7 @@ pipelines:
         stage: build_docker
       deductions_infra:
         pipeline: prm-deductions-infra
-        stage: check_dev
+        stage: wait_dns_dev
     environment_variables:
       NHS_ENVIRONMENT: dev
     stages:
@@ -114,7 +114,7 @@ pipelines:
         stage: build_docker
       deductions_infra:
         pipeline: prm-deductions-infra
-        stage: check_test
+        stage: wait_dns_test
     environment_variables:
       NHS_ENVIRONMENT: test
     stages:
