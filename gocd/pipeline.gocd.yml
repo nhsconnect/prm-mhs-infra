@@ -64,6 +64,16 @@ pipelines:
     environment_variables:
       NHS_ENVIRONMENT: dev
     stages:
+      - promote_docker_image:
+          resources:
+            - docker
+          clean_workspace: true
+          tasks:
+            - exec:
+                command: /bin/bash
+                arguments:
+                  - -c
+                  - ./tasks promote_docker_image
       - deploy:
           clean_workspace: true
           jobs:
@@ -118,6 +128,16 @@ pipelines:
     environment_variables:
       NHS_ENVIRONMENT: test
     stages:
+      - promote_docker_image:
+          resources:
+            - docker
+          clean_workspace: true
+          tasks:
+            - exec:
+                command: /bin/bash
+                arguments:
+                  - -c
+                  - ./tasks promote_docker_image
       - deploy:
           clean_workspace: true
           jobs:

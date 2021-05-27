@@ -11,5 +11,6 @@ terraform.tfstate*
 
 node_modules/
 
-
+# Imported utilities
+/utils/*
 
