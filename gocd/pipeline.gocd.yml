@@ -71,6 +71,7 @@ pipelines:
           tasks:
             - exec:
                 command: /bin/bash
+                working_directory: prm-mhs-infra
                 arguments:
                   - -c
                   - ./tasks promote_docker_image
@@ -135,6 +136,7 @@ pipelines:
           tasks:
             - exec:
                 command: /bin/bash
+                working_directory: prm-mhs-infra
                 arguments:
                   - -c
                   - ./tasks promote_docker_image
