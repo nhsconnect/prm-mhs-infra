@@ -8,7 +8,7 @@ AWS_DEFAULT_REGION=$AWS_REGION
 IMAGE_REPO_NAME=mhs-unbound-dns
 
 AWS_HELPERS_FILE="utils/aws-helpers"
-AWS_HELPERS_VERSION=0.1.2
+AWS_HELPERS_VERSION=0.2.1
 mkdir -p utils
 if [[ ! -f $AWS_HELPERS_FILE ]];then
   wget --quiet -O $AWS_HELPERS_FILE https://github.com/nhsconnect/prm-deductions-support-infra/releases/download/${AWS_HELPERS_VERSION}/aws-helpers
@@ -26,6 +26,20 @@ if [ -z "${DNS_IMAGE_TAG}" ]; then
   DNS_IMAGE_TAG="${GO_DEPENDENCY_LABEL_DOCKER_DNS_IMAGES:-alpha}"
 fi
 
+function tf_init {
+  check_env
+  #  Condition [ $NHS_ENVIRONMENT == "test" ] is required as test environment infrastructure is deployed in CI AWS account
+  [ $NHS_ENVIRONMENT == "ci" ] || [ $NHS_ENVIRONMENT == "test" ] &&  bucket_env_infix=""  || bucket_env_infix="$NHS_ENVIRONMENT-"
+
+  cd terraform
+
+  terraform init -reconfigure \
+    -backend-config key="${NHS_SERVICE}-${NHS_ENVIRONMENT}-${cluster_name}/terraform.tfstate" \
+    -backend-config bucket="prm-deductions-${bucket_env_infix}terraform-state" \
+    -backend-config dynamodb_table="prm-deductions-${bucket_env_infix}terraform-table" \
+    -backend-config region=${AWS_DEFAULT_REGION}
+}
+
 function tf_plan {
   operation=$1
   cluster_name=$2
@@ -39,8 +53,7 @@ function tf_plan {
 
   check_cluster_name $cluster_name
 
-  cd terraform/
-  terraform init -reconfigure -backend-config key=${NHS_SERVICE}-${NHS_ENVIRONMENT}-${cluster_name}/terraform.tfstate
+  tf_init
   terraform get # modules
   if [[ "${operation}" == "create" ]]; then
     terraform plan -var build_id=$MHS_IMAGE_TAG -var fork_build_id="${GO_REVISION_INTEGRATION_ADAPTORS}" -var-file=${NHS_ENVIRONMENT}.tfvars -var-file=${NHS_ENVIRONMENT}_${cluster_name}.tfvars -out="${NHS_ENVIRONMENT}.tfplan"
@@ -53,8 +66,7 @@ function tf_plan {
 }
 
 function tf_apply {
-  cd terraform/
-  terraform init -backend-config key=${NHS_SERVICE}-${NHS_ENVIRONMENT}-${cluster_name}/terraform.tfstate
+  tf_init
   terraform get # modules
   terraform apply ${NHS_ENVIRONMENT}.tfplan
   terraform output -json > tf-out.json
@@ -174,10 +186,12 @@ case "${command}" in
       ;;
   _tf_plan_repo)
       check_env
+      _assume_environment_role $NHS_ENVIRONMENT
       tf_plan "$2" repo
       ;;
   _tf_plan_test_harness)
       check_env
+      _assume_environment_role $NHS_ENVIRONMENT
       tf_plan "$2" test_harness
       ;;
   tf_plan_repo)
@@ -190,6 +204,7 @@ case "${command}" in
       ;;
   _tf_apply)
       check_env
+      _assume_environment_role $NHS_ENVIRONMENT
       tf_apply
       ;;
   tf_apply)
@@ -210,6 +225,7 @@ case "${command}" in
       promote_docker_image "mhs-route:$MHS_IMAGE_TAG" "$NHS_ENVIRONMENT"
       ;;
   _wait_ecs)
+      _assume_environment_role $NHS_ENVIRONMENT
       cluster_name=$2
       check_cluster_name $cluster_name
 

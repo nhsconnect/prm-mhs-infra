@@ -6,10 +6,6 @@ data "aws_ssm_parameter" "mq-app-password" {
   name = "/repo/${var.environment}/user-input/mq-app-password"
 }
 
-data "aws_ssm_parameter" "amqp-endpoint-active" {
-  name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-active"
-}
-
 data "aws_ssm_parameter" "amqp-endpoint-0" {
   name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-0"
 }
@@ -45,8 +41,6 @@ data "aws_secretsmanager_secret" "inbound-ca-certs" {
 locals {
   inbound_queue_username_arn=data.aws_ssm_parameter.mq-app-username.arn
   inbound_queue_password_arn=data.aws_ssm_parameter.mq-app-password.arn
-  #FIXME: mhs-inbound limitation: should use a failover connection string with both endpoints
-  inbound_queue_host=replace(data.aws_ssm_parameter.amqp-endpoint-active.value, "amqp+ssl", "amqps")
   inbound_queue_broker_0=replace(data.aws_ssm_parameter.amqp-endpoint-0.value, "amqp+ssl", "amqps")
   inbound_queue_broker_1=replace(data.aws_ssm_parameter.amqp-endpoint-1.value, "amqp+ssl", "amqps")
   inbound_queue_brokers="${local.inbound_queue_broker_0},${local.inbound_queue_broker_1}"

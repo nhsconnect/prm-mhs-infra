@@ -62,7 +62,3 @@ locals {
   mhs_dynamodb_vpc_endpoint_prefix_list_id = data.aws_vpc_endpoint.mhs-dynamodb.prefix_list_id
   mhs_s3_vpc_endpoint_prefix_list_id = data.aws_vpc_endpoint.mhs-s3.prefix_list_id
 }
-
-data "aws_ssm_parameter" "public_root_zone_id" {
-  name = "/repo/output/prm-deductions-base-infra/root-zone-id"
-}
