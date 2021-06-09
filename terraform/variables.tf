@@ -9,8 +9,6 @@ variable "mhs_state_table_write_capacity" {}
 variable "mhs_sync_async_table_read_capacity" {}
 variable "mhs_sync_async_table_write_capacity" {}
 
-variable "nlb_private_ips" { }
-
 variable "setup_public_dns_record" {
   description = "Should be true for PTL-* environments, and false for OpenTest"
 }

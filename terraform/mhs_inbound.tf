@@ -323,21 +323,7 @@ resource "aws_lb" "inbound_nlb" {
   load_balancer_type = "network"
   enable_cross_zone_load_balancing = true
   enable_deletion_protection = false
-
-  subnet_mapping {
-    subnet_id            = tolist(local.mhs_private_subnet_ids)[0]
-    private_ipv4_address = var.nlb_private_ips[0]
-  }
-
-  subnet_mapping {
-    subnet_id            = tolist(local.mhs_private_subnet_ids)[1]
-    private_ipv4_address = var.nlb_private_ips[1]
-  }
-
-  subnet_mapping {
-    subnet_id            = tolist(local.mhs_private_subnet_ids)[2]
-    private_ipv4_address = var.nlb_private_ips[2]
-  }
+  subnets = local.mhs_private_subnet_ids
 
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-inbound"
@@ -354,7 +340,7 @@ resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
   type = "A"
   ttl = 600
 
-  records = var.nlb_private_ips
+  records = aws_lb.inbound_nlb.subnet_mapping.*.private_ipv4_address
 }
 
 # Target group for the network load balancer for MHS inbound port 443
