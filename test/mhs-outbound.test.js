@@ -6,6 +6,8 @@ import { config } from "./utils/config";
 import { testData } from "./utils/test-data";
 import { testPdsRetrievalMessage } from "./utils/pds-retrieval-message";
 
+const TEST_TIMEOUT = 20000
+
 describe('MHS Outbound', () => {
   it('should successfully retrieve patient data from pds', async () => {
     const { repoAsid, nhsNumber, gpOdsCode } = testData[config.nhsEnvironment];
@@ -34,5 +36,6 @@ describe('MHS Outbound', () => {
 
     expect(res.status).toEqual(200);
     expect(res.data).toContain(gpOdsCode);
-  });
+  },
+  TEST_TIMEOUT);
 });
