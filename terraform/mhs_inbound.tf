@@ -413,7 +413,6 @@ resource "aws_lb_listener" "inbound_http_nlb_listener" {
   }
 }
 
-// TODO: double check the name as it used to be different than the public one
 resource "aws_route53_record" "mhs_inbound_load_balancer_record" {
   zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
   name = "inbound-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
@@ -424,4 +423,18 @@ resource "aws_route53_record" "mhs_inbound_load_balancer_record" {
     zone_id = aws_lb.inbound_nlb.zone_id
     evaluate_target_health = false
   }
+}
+
+data "aws_ssm_parameter" "service-to-mq-sg-id" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/service-to-mq-sg-id"
+}
+
+resource "aws_security_group_rule" "inbound_mhs_to_mq" {
+  type                = "ingress"
+  description         = "Access to queues from MHS inbound"
+  protocol            = "tcp"
+  from_port           = "5671"
+  to_port             = "5671"
+  security_group_id = data.aws_ssm_parameter.service-to-mq-sg-id.value
+  source_security_group_id = aws_security_group.mhs_inbound_security_group.id
 }
