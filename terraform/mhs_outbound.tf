@@ -202,12 +202,52 @@ resource "aws_security_group" "mhs_outbound" {
 resource "aws_alb" "outbound_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
   subnets = local.mhs_private_subnet_ids
-  security_groups = local.alb_sgs
+  security_groups = [aws_security_group.outbound_alb.id]
   internal        = true
 
   tags = {
     CreatedBy   = var.repo_name
     Environment = var.environment
+  }
+}
+
+# MHS outbound load balancer security group
+resource "aws_security_group" "outbound_alb" {
+  name = "${var.environment}-${var.cluster_name}-mhs-outbound-alb"
+  description = "The security group used to control traffic for the MHS outbound component Application Load Balancer."
+  vpc_id = local.mhs_vpc_id
+
+
+  # Allow inbound traffic from MHS VPC
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [local.mhs_vpc_cidr_block]
+    description = "ALB outbound ingress from MHS VPC"
+  }
+
+  # TODO: Restrict the ingress cidr block to deductions private
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [var.allowed_mhs_clients]
+    description = "ALB outbound ingress from MHS clients"
+  }
+
+  egress {
+    from_port = 80
+    to_port = 80
+    cidr_blocks = [local.mhs_vpc_cidr_block]
+    protocol = "tcp"
+    description = "ALB outbound egress to MHS VPC"
+  }
+
+  tags = {
+    Name = "${var.environment}-alb-outbound-sg"
+    Environment = var.environment
+    CreatedBy = var.repo_name
   }
 }
 
