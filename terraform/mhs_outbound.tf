@@ -143,62 +143,6 @@ resource "aws_ecs_service" "mhs_outbound_service" {
   }
 }
 
-resource "aws_security_group" "mhs_outbound" {
-  name = "${var.environment}-${var.cluster_name}-mhs-outbound"
-  description = "The security group used to control traffic for the MHS outbound component."
-  vpc_id = local.mhs_vpc_id
-
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-outbound-sg"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [var.spine_cidr]
-    description = "MHS outbound egress to SDS and spine"
-  }
-
-  egress {
-    from_port = 53
-    to_port = 53
-    protocol = "udp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS outbound egress to DNS"
-  }
-
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    prefix_list_ids = [
-      local.mhs_dynamodb_vpc_endpoint_prefix_list_id,
-      local.mhs_s3_vpc_endpoint_prefix_list_id
-    ]
-    description = "MHS outbound egress to AWS VPC endpoints for dynamodb and s3 (gateway type)"
-  }
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS outbound egress to MHS VPC"
-  }
-
-  ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS outbound ingress from MHS VPC"
-  }
-}
-
 resource "aws_alb" "outbound_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
   subnets = local.mhs_private_subnet_ids
@@ -248,48 +192,20 @@ resource "aws_security_group" "ecs-tasks-sg" {
   name        = "${var.environment}-${var.cluster_name}-mhs-out-ecs-tasks-sg"
   vpc_id      = local.mhs_vpc_id
 
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [var.spine_cidr]
-    description = "MHS outbound egress to SDS and spine"
-  }
-
-  egress {
-    from_port = 53
-    to_port = 53
-    protocol = "udp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS outbound egress to DNS"
-  }
-
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    prefix_list_ids = [
-      local.mhs_dynamodb_vpc_endpoint_prefix_list_id,
-      local.mhs_s3_vpc_endpoint_prefix_list_id
-    ]
-    description = "MHS outbound egress to AWS VPC endpoints for dynamodb and s3 (gateway type)"
-  }
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS outbound egress to MHS VPC"
-  }
-
   ingress {
+    description = "MHS outbound ingress from ALB"
+    protocol = "tcp"
     from_port = 80
     to_port = 80
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS outbound ingress from MHS VPC"
+    security_groups = [aws_security_group.mhs_outbound_alb.id]
+  }
+
+  egress {
+    description = "Allow All Outbound"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
