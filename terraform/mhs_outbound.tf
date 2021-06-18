@@ -105,7 +105,7 @@ resource "aws_ecs_service" "mhs_outbound_service" {
   network_configuration {
     assign_public_ip = false
     security_groups = [
-      aws_security_group.mhs_outbound.id
+      aws_security_group.ecs-tasks-sg.id
     ]
     subnets = local.mhs_private_subnet_ids
   }
@@ -119,7 +119,7 @@ resource "aws_ecs_service" "mhs_outbound_service" {
   }
 
   depends_on = [
-    aws_lb.outbound_alb
+    aws_alb.outbound_alb
   ]
 
   # Preserve the autoscaled instance count when this service is updated
@@ -186,22 +186,156 @@ resource "aws_security_group" "mhs_outbound" {
   }
 }
 
-resource "aws_lb" "outbound_alb" {
-  # Name length limited to 32 chars
+resource "aws_alb" "outbound_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
-  internal = true
-  load_balancer_type = "application"
   subnets = local.mhs_private_subnet_ids
   security_groups = [
-    aws_security_group.outbound_alb.id
+    aws_security_group.mhs_outbound_alb.id,
+    aws_security_group.alb_to_mhs_outbound_ecs.id,
+    aws_security_group.service_to_mhs_outbound.id,
+    aws_security_group.vpn_to_mhs_outbound.id,
+    aws_security_group.gocd_to_mhs_outbound.id
   ]
+  internal        = true
 
   tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-outbound-alb"
+    CreatedBy   = var.repo_name
     Environment = var.environment
-    CreatedBy = var.repo_name
   }
 }
+
+# Exists to be referred by the ECS task of mhs outbound
+resource "aws_security_group" "mhs_outbound_alb" {
+  name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
+  description = "mhs outbound ALB security group"
+  vpc_id      = local.mhs_vpc_id
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "alb_to_mhs_outbound_ecs" {
+  name        = "${var.environment}-${var.cluster_name}-alb-to-mhs-out-ecs"
+  description = "Allows mhs outbound ALB connections to mhs outbound component task"
+  vpc_id      = local.mhs_vpc_id
+
+  egress {
+    description = "Allow outbound connections to mhs outbound ECS Task"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    security_groups = [aws_security_group.ecs-tasks-sg.id]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-alb-to-mhs-out-ecs"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "ecs-tasks-sg" {
+  name        = "${var.environment}-${var.cluster_name}-mhs-out-ecs-tasks-sg"
+  vpc_id      = local.mhs_vpc_id
+
+  ingress {
+    description     = "Allow traffic from internal ALB of mhs outbound"
+    protocol        = "tcp"
+    from_port       = "3000"
+    to_port         = "3000"
+    security_groups = [
+      aws_security_group.mhs_outbound_alb.id
+    ]
+  }
+
+  egress {
+    description = "Allow All Outbound"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-out-ecs-tasks-sg"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "service_to_mhs_outbound" {
+  name        = "${var.environment}-${var.cluster_name}-service-to-mhs-out"
+  description = "controls access from repo services to ehr-repo"
+  vpc_id      = local.mhs_vpc_id
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-service-to-mhs-out"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "service_to_mhs_outbound" {
+  name = "/repo/${var.environment}/output/mhs-outbound/service-to-ehr-repo-sg-id"
+  type = "String"
+  value = aws_security_group.service_to_mhs_outbound.id
+  tags = {
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "vpn_to_mhs_outbound" {
+  name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound"
+  description = "controls access from vpn to ehr-repo"
+  vpc_id      = local.mhs_vpc_id
+
+  ingress {
+    description = "Allow vpn to access mhs-outbound ALB"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    security_groups = [data.aws_ssm_parameter.vpn_sg_id.value]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "gocd_to_mhs_outbound" {
+  name        = "${var.environment}-${var.cluster_name}-gocd-to-mhs-outbound"
+  description = "controls access from gocd to ehr-repo"
+  vpc_id      = local.mhs_vpc_id
+
+  ingress {
+    description = "Allow gocd to access mhs-outbound ALB"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    security_groups = [data.aws_ssm_parameter.gocd_sg_id.value]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-gocd-to-mhs-outbound"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+data "aws_ssm_parameter" "vpn_sg_id" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/vpn-sg-id"
+}
+
+data "aws_ssm_parameter" "gocd_sg_id" {
+  name = "/repo/${var.environment}/user-input/external/gocd-agent-sg-id"
+}
+
 
 resource "aws_lb_target_group" "outbound_alb_target_group" {
   name = "${var.environment}-${var.cluster_name}-mhs-outbound"
@@ -224,8 +358,8 @@ resource "aws_lb_target_group" "outbound_alb_target_group" {
 }
 
 # Listener for MHS outbound service's load balancer that forwards requests to the correct target group
-resource "aws_lb_listener" "outbound_alb_listener" {
-  load_balancer_arn = aws_lb.outbound_alb.arn
+resource "aws_alb_listener" "outbound_alb_listener" {
+  load_balancer_arn = aws_alb.outbound_alb.arn
   port = 443
   protocol = "HTTPS"
   ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
@@ -237,56 +371,17 @@ resource "aws_lb_listener" "outbound_alb_listener" {
   }
 }
 
-# MHS outbound load balancer security group
-resource "aws_security_group" "outbound_alb" {
-  name = "${var.environment}-${var.cluster_name}-mhs-outbound-alb"
-  description = "The security group used to control traffic for the MHS outbound component Application Load Balancer."
-  vpc_id = local.mhs_vpc_id
-
-
-  # Allow inbound traffic from MHS VPC
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "ALB outbound ingress from MHS VPC"
-  }
-
-  # TODO: Restrict the ingress cidr block to deductions private
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [var.allowed_mhs_clients]
-    description = "ALB outbound ingress from MHS clients"
-  }
-
-  egress {
-    from_port = 80
-    to_port = 80
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    protocol = "tcp"
-    description = "ALB outbound egress to MHS VPC"
-  }
-
-  tags = {
-    Name = "${var.environment}-alb-outbound-sg"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-}
-
 resource "aws_route53_record" "mhs_outbound_load_balancer_record" {
   zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
   name = "outbound.${var.cluster_suffix}"
   type = "A"
 
   alias {
-    name = aws_lb.outbound_alb.dns_name
-    zone_id = aws_lb.outbound_alb.zone_id
+    name = aws_alb.outbound_alb.dns_name
+    zone_id = aws_alb.outbound_alb.zone_id
     evaluate_target_health = false
   }
+
 }
 
 resource "aws_ssm_parameter" "outbound_url" {
