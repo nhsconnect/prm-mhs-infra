@@ -309,6 +309,14 @@ resource "aws_security_group" "vpn_to_mhs_outbound" {
     security_groups = [data.aws_ssm_parameter.vpn_sg_id.value]
   }
 
+  egress {
+    description = "Allow All Outbound"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags = {
     Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound"
     CreatedBy   = var.repo_name
