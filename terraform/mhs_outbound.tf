@@ -192,7 +192,7 @@ resource "aws_alb" "outbound_alb" {
   security_groups = [
     aws_security_group.mhs_outbound_alb.id,
     aws_security_group.alb_to_mhs_outbound_ecs.id,
-    aws_security_group.service_to_mhs_outbound.id,
+    aws_security_group.service_to_mhs_outbound[0].id,
     aws_security_group.vpn_to_mhs_outbound.id,
     aws_security_group.gocd_to_mhs_outbound.id
   ]
@@ -267,6 +267,7 @@ resource "aws_security_group" "ecs-tasks-sg" {
 }
 
 resource "aws_security_group" "service_to_mhs_outbound" {
+  count = var.deploy_service_to_mhs_sg ? 1 : 0
   name        = "${var.environment}-${var.cluster_name}-service-to-mhs-out"
   description = "controls access from repo services to ehr-repo"
   vpc_id      = local.mhs_vpc_id
@@ -279,9 +280,10 @@ resource "aws_security_group" "service_to_mhs_outbound" {
 }
 
 resource "aws_ssm_parameter" "service_to_mhs_outbound" {
-  name = "/repo/${var.environment}/output/mhs-outbound/service-to-ehr-repo-sg-id"
+  count = var.deploy_service_to_mhs_sg ? 1 : 0
+  name = "/repo/${var.environment}/output/${var.repo_name}/service-to-mhs-outbound-sg-id"
   type = "String"
-  value = aws_security_group.service_to_mhs_outbound.id
+  value = aws_security_group.service_to_mhs_outbound[0].id
   tags = {
     CreatedBy   = var.repo_name
     Environment = var.environment

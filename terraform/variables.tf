@@ -116,3 +116,5 @@ variable "cluster_suffix" {}
 variable "sds_port" {}
 
 variable "spine_org_code" {}
+
+variable "deploy_service_to_mhs_sg" {}
