@@ -1,3 +1,16 @@
+locals {
+  sgs_with_service_to_mhs_outbound = [aws_security_group.mhs_outbound_alb.id,
+    aws_security_group.alb_to_mhs_outbound_ecs.id,
+    aws_security_group.service_to_mhs_outbound[0].id,
+    aws_security_group.vpn_to_mhs_outbound.id,
+    aws_security_group.gocd_to_mhs_outbound.id]
+  sgs_without_service_to_mhs_outbound = [  aws_security_group.mhs_outbound_alb.id,
+    aws_security_group.alb_to_mhs_outbound_ecs.id,
+    aws_security_group.vpn_to_mhs_outbound.id,
+    aws_security_group.gocd_to_mhs_outbound.id]
+  alb_sgs = var.deploy_service_to_mhs_sg ? local.sgs_with_service_to_mhs_outbound : local.sgs_without_service_to_mhs_outbound
+}
+
 resource "aws_ecs_cluster" "mhs_outbound_cluster" {
   name = "${var.environment}-${var.cluster_name}-mhs-outbound-cluster"
 
@@ -189,13 +202,7 @@ resource "aws_security_group" "mhs_outbound" {
 resource "aws_alb" "outbound_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
   subnets = local.mhs_private_subnet_ids
-  security_groups = [
-    aws_security_group.mhs_outbound_alb.id,
-    aws_security_group.alb_to_mhs_outbound_ecs.id,
-    aws_security_group.service_to_mhs_outbound[0].id,
-    aws_security_group.vpn_to_mhs_outbound.id,
-    aws_security_group.gocd_to_mhs_outbound.id
-  ]
+  security_groups = local.alb_sgs
   internal        = true
 
   tags = {
