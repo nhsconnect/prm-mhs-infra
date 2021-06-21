@@ -217,7 +217,7 @@ resource "aws_security_group" "ecs-tasks-sg" {
 
 resource "aws_security_group" "service_to_mhs_outbound" {
   name        = "${var.environment}-${var.cluster_name}-service-to-mhs-out"
-  description = "controls access from repo services to ehr-repo"
+  description = "controls access from repo services to MHS outbound"
   vpc_id      = local.mhs_vpc_id
 
   tags = {
@@ -240,7 +240,7 @@ resource "aws_ssm_parameter" "service_to_mhs_outbound" {
 
 resource "aws_security_group" "vpn_to_mhs_outbound" {
   name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound"
-  description = "controls access from vpn to ehr-repo"
+  description = "controls access from vpn to MHS outbound"
   vpc_id      = local.mhs_vpc_id
 
   ingress {
@@ -260,7 +260,7 @@ resource "aws_security_group" "vpn_to_mhs_outbound" {
 
 resource "aws_security_group" "gocd_to_mhs_outbound" {
   name        = "${var.environment}-${var.cluster_name}-gocd-to-mhs-outbound"
-  description = "controls access from gocd to ehr-repo"
+  description = "controls access from gocd to MHS outbound"
   vpc_id      = local.mhs_vpc_id
 
   ingress {
