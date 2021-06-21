@@ -106,6 +106,135 @@ resource "aws_ecs_task_definition" "mhs_route_task" {
   execution_role_arn = local.execution_role_arn
 }
 
+resource "aws_ecs_service" "mhs_route_service" {
+  name = "${var.environment}-${var.cluster_name}-mhs-route"
+  cluster = aws_ecs_cluster.mhs_route_cluster.id
+  deployment_maximum_percent = 200
+  deployment_minimum_healthy_percent = 100
+  desired_count = var.mhs_route_service_minimum_instance_count
+  launch_type = "FARGATE"
+  platform_version = "1.3.0"
+  scheduling_strategy = "REPLICA"
+  task_definition = aws_ecs_task_definition.mhs_route_task.arn
+
+  network_configuration {
+    assign_public_ip = false
+    security_groups = [
+      aws_security_group.mhs_route.id
+    ]
+    subnets = local.mhs_private_subnet_ids
+  }
+
+  load_balancer {
+    # In the MHS route task definition, we define only 1 container, and for that container, we expose only 1 port
+    # That is why in these 2 lines below we do "[0]" to reference that one container and port definition.
+    container_name = jsondecode(aws_ecs_task_definition.mhs_route_task.container_definitions)[0].name
+    container_port = 80
+    target_group_arn = aws_lb_target_group.route_alb_target_group.arn
+  }
+
+  depends_on = [
+    aws_lb.route_alb
+  ]
+
+  # Preserve the autoscaled instance count when this service is updated
+  lifecycle {
+    ignore_changes = [
+      desired_count
+    ]
+  }
+}
+
+resource "aws_security_group" "mhs_route" {
+  name = "${var.environment}-${var.cluster_name}-mhs-route"
+  description = "The security group used to control traffic for the MHS Routing component."
+  vpc_id = local.mhs_vpc_id
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-route-sg"
+    Environment = var.environment
+    CreatedBy = var.repo_name
+  }
+
+  egress {
+    description = "Allow All Outbound"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = [local.mhs_vpc_cidr_block]
+    description = "MHS route ingress from MHS VPC"
+  }
+}
+
+resource "aws_security_group_rule" "elasticache_ingress_from_mhs_route" {
+  type = "ingress"
+  from_port = 6379
+  to_port = 6379
+  protocol = "tcp"
+  security_group_id = aws_security_group.sds_cache.id
+  source_security_group_id = aws_security_group.mhs_route.id
+  description = "Elasticache ingress from MHS route"
+}
+
+resource "aws_lb" "route_alb" {
+  name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
+  internal = true
+  load_balancer_type = "application"
+  subnets = local.mhs_private_subnet_ids
+  security_groups = [
+    aws_security_group.route_alb.id
+  ]
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
+    Environment = var.environment
+    CreatedBy = var.repo_name
+  }
+}
+
+# Target group for the application load balancer for MHS route service
+# The MHS route ECS service registers it's tasks here.
+resource "aws_lb_target_group" "route_alb_target_group" {
+  name = "${var.environment}-${var.cluster_name}-mhs-route"
+  port = 80
+  protocol = "HTTP"
+  target_type = "ip"
+  vpc_id = local.mhs_vpc_id
+  deregistration_delay = var.deregistration_delay
+
+  health_check {
+    path = "/healthcheck"
+    matcher = "200"
+  }
+
+  tags = {
+    Name = "${var.environment}-mhs-route-alb-target-group"
+    Environment = var.environment
+    CreatedBy = var.repo_name
+  }
+}
+
+# Listener for MHS route service's load balancer that forwards requests to the correct target group
+resource "aws_lb_listener" "route_alb_listener" {
+  load_balancer_arn = aws_lb.route_alb.arn
+  port = 443
+  protocol = "HTTPS"
+  ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  certificate_arn = aws_acm_certificate.mhs_route_cert.arn
+
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.route_alb_target_group.arn
+  }
+}
+
 # MHS route load balancer security group
 resource "aws_security_group" "route_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
@@ -143,133 +272,6 @@ resource "aws_security_group" "route_alb" {
     Name = "${var.environment}-alb-route-sg"
     Environment = var.environment
     CreatedBy = var.repo_name
-  }
-}
-
-resource "aws_security_group" "route_ecs_tasks_sg" {
-  name        = "${var.environment}-${var.cluster_name}-mhs-route-ecs-tasks-sg"
-  vpc_id      = local.mhs_vpc_id
-
-  ingress {
-    description = "MHS route ingress from ALB"
-    protocol = "tcp"
-    from_port = 80
-    to_port = 80
-    security_groups = [aws_security_group.route_alb.id]
-  }
-
-  ingress {
-    description = "Elasticache ingress from MHS route"
-    protocol = "tcp"
-    from_port = 6379
-    to_port = 6379
-    security_groups = [aws_security_group.sds_cache.id]
-  }
-
-  egress {
-    description = "Allow All Outbound"
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-route-ecs-tasks-sg"
-    CreatedBy   = var.repo_name
-    Environment = var.environment
-  }
-}
-
-
-resource "aws_lb" "route_alb" {
-  name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
-  internal = true
-  load_balancer_type = "application"
-  subnets = local.mhs_private_subnet_ids
-  security_groups = [
-    aws_security_group.route_alb.id
-  ]
-
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-}
-
-resource "aws_ecs_service" "mhs_route_service" {
-  name = "${var.environment}-${var.cluster_name}-mhs-route"
-  cluster = aws_ecs_cluster.mhs_route_cluster.id
-  deployment_maximum_percent = 200
-  deployment_minimum_healthy_percent = 100
-  desired_count = var.mhs_route_service_minimum_instance_count
-  launch_type = "FARGATE"
-  platform_version = "1.3.0"
-  scheduling_strategy = "REPLICA"
-  task_definition = aws_ecs_task_definition.mhs_route_task.arn
-
-  network_configuration {
-    assign_public_ip = false
-    security_groups = [
-      aws_security_group.route_ecs_tasks_sg.id
-    ]
-    subnets = local.mhs_private_subnet_ids
-  }
-
-  load_balancer {
-    # In the MHS route task definition, we define only 1 container, and for that container, we expose only 1 port
-    # That is why in these 2 lines below we do "[0]" to reference that one container and port definition.
-    container_name = jsondecode(aws_ecs_task_definition.mhs_route_task.container_definitions)[0].name
-    container_port = 80
-    target_group_arn = aws_lb_target_group.route_alb_target_group.arn
-  }
-
-  depends_on = [
-    aws_lb.route_alb
-  ]
-
-  # Preserve the autoscaled instance count when this service is updated
-  lifecycle {
-    ignore_changes = [
-      desired_count
-    ]
-  }
-}
-
-# Target group for the application load balancer for MHS route service
-# The MHS route ECS service registers it's tasks here.
-resource "aws_lb_target_group" "route_alb_target_group" {
-  name = "${var.environment}-${var.cluster_name}-mhs-route"
-  port = 80
-  protocol = "HTTP"
-  target_type = "ip"
-  vpc_id = local.mhs_vpc_id
-  deregistration_delay = var.deregistration_delay
-
-  health_check {
-    path = "/healthcheck"
-    matcher = "200"
-  }
-
-  tags = {
-    Name = "${var.environment}-mhs-route-alb-target-group"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-}
-
-# Listener for MHS route service's load balancer that forwards requests to the correct target group
-resource "aws_lb_listener" "route_alb_listener" {
-  load_balancer_arn = aws_lb.route_alb.arn
-  port = 443
-  protocol = "HTTPS"
-  ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn = aws_acm_certificate.mhs_route_cert.arn
-
-  default_action {
-    type = "forward"
-    target_group_arn = aws_lb_target_group.route_alb_target_group.arn
   }
 }
 
