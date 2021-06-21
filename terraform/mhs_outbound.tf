@@ -8,7 +8,7 @@ locals {
     aws_security_group.alb_to_mhs_outbound_ecs.id,
     aws_security_group.vpn_to_mhs_outbound.id,
     aws_security_group.gocd_to_mhs_outbound.id]
-  alb_sgs = var.deploy_service_to_mhs_sg ? local.sgs_with_service_to_mhs_outbound : local.sgs_without_service_to_mhs_outbound
+  outbound_alb_sgs = var.deploy_service_to_mhs_sg ? local.sgs_with_service_to_mhs_outbound : local.sgs_without_service_to_mhs_outbound
 }
 
 resource "aws_ecs_cluster" "mhs_outbound_cluster" {
@@ -118,7 +118,7 @@ resource "aws_ecs_service" "mhs_outbound_service" {
   network_configuration {
     assign_public_ip = false
     security_groups = [
-      aws_security_group.ecs-tasks-sg.id
+      aws_security_group.outbound_ecs_tasks_sg.id
     ]
     subnets = local.mhs_private_subnet_ids
   }
@@ -146,7 +146,7 @@ resource "aws_ecs_service" "mhs_outbound_service" {
 resource "aws_alb" "outbound_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
   subnets = local.mhs_private_subnet_ids
-  security_groups = local.alb_sgs
+  security_groups = local.outbound_alb_sgs
   internal        = true
 
   tags = {
@@ -178,7 +178,7 @@ resource "aws_security_group" "alb_to_mhs_outbound_ecs" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    security_groups = [aws_security_group.ecs-tasks-sg.id]
+    security_groups = [aws_security_group.outbound_ecs_tasks_sg.id]
   }
 
   tags = {
@@ -188,7 +188,7 @@ resource "aws_security_group" "alb_to_mhs_outbound_ecs" {
   }
 }
 
-resource "aws_security_group" "ecs-tasks-sg" {
+resource "aws_security_group" "outbound_ecs_tasks_sg" {
   name        = "${var.environment}-${var.cluster_name}-mhs-out-ecs-tasks-sg"
   vpc_id      = local.mhs_vpc_id
 
