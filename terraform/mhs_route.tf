@@ -157,46 +157,11 @@ resource "aws_security_group" "mhs_route" {
   }
 
   egress {
-    from_port = var.sds_port
-    to_port = var.sds_port
-    protocol = "tcp"
-    cidr_blocks = [var.spine_cidr]
-    description = "MHS route egress to SDS and spine"
-  }
-
-  egress {
-    from_port = 53
-    to_port = 53
-    protocol = "udp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS route egress to DNS"
-  }
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    prefix_list_ids = [
-      local.mhs_dynamodb_vpc_endpoint_prefix_list_id,
-      local.mhs_s3_vpc_endpoint_prefix_list_id
-    ]
-    description = "MHS route egress to AWS VPC endpoints for dynamodb and s3 (gateway type)"
-  }
-
-  egress {
-    from_port = 6379
-    to_port = 6379
-    protocol = "tcp"
-    security_groups = [aws_security_group.sds_cache.id]
-    description = "MHS route egress to elasticache"
-  }
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS route egress to MHS VPC"
+    description = "Allow All Outbound"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -276,6 +241,13 @@ resource "aws_security_group" "route_alb" {
   description = "The security group used to control traffic for the MHS routing component Application Load Balancer."
   vpc_id = local.mhs_vpc_id
 
+  egress {
+    description = "Allow All Outbound"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   # Allow inbound traffic from MHS VPC
   ingress {
@@ -294,14 +266,6 @@ resource "aws_security_group" "route_alb" {
     protocol = "tcp"
     cidr_blocks = [var.allowed_mhs_clients]
     description = "ALB route ingress from MHS clients"
-  }
-
-  egress {
-    from_port = 80
-    to_port = 80
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    protocol = "tcp"
-    description = "ALB route egress to MHS VPC"
   }
 
   tags = {
