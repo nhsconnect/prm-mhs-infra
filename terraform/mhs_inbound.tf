@@ -250,27 +250,11 @@ resource "aws_security_group" "mhs_inbound_security_group" {
   }
 
   ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [var.allowed_mhs_clients]
-    description = "Allow HTTPS inbound requests from MHS clients"
-  }
-
-  ingress {
     from_port = 80
     to_port = 80
     protocol = "tcp"
     cidr_blocks = [local.mhs_vpc_cidr_block]
     description = "Allow HTTP inbound requests from MHS inbound load balancer"
-  }
-
-  ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = [var.allowed_mhs_clients]
-    description = "Allow HTTP inbound requests from MHS clients"
   }
 
   egress {
