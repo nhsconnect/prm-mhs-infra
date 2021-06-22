@@ -120,7 +120,7 @@ resource "aws_ecs_service" "mhs_route_service" {
   network_configuration {
     assign_public_ip = false
     security_groups = [
-      aws_security_group.mhs_route.id
+      aws_security_group.route_ecs_tasks_sg.id
     ]
     subnets = local.mhs_private_subnet_ids
   }
@@ -145,15 +145,16 @@ resource "aws_ecs_service" "mhs_route_service" {
   }
 }
 
-resource "aws_security_group" "mhs_route" {
-  name = "${var.environment}-${var.cluster_name}-mhs-route"
-  description = "The security group used to control traffic for the MHS Routing component."
-  vpc_id = local.mhs_vpc_id
+resource "aws_security_group" "route_ecs_tasks_sg" {
+  name        = "${var.environment}-${var.cluster_name}-mhs-route-ecs-tasks-sg"
+  vpc_id      = local.mhs_vpc_id
 
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-route-sg"
-    Environment = var.environment
-    CreatedBy = var.repo_name
+  ingress {
+    description = "MHS route ingress from ALB"
+    protocol = "tcp"
+    from_port = 80
+    to_port = 80
+    security_groups = [aws_security_group.route_alb.id]
   }
 
   egress {
@@ -164,12 +165,10 @@ resource "aws_security_group" "mhs_route" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "MHS route ingress from MHS VPC"
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-route-ecs-tasks-sg"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
   }
 }
 

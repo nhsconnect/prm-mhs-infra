@@ -37,7 +37,7 @@ resource "aws_security_group" "sds_cache" {
     from_port = 6379
     to_port = 6379
     protocol = "tcp"
-    security_groups = [aws_security_group.mhs_route.id]
+    security_groups = [aws_security_group.route_ecs_tasks_sg.id]
   }
 
   tags = {
