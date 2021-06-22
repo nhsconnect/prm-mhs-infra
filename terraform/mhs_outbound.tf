@@ -201,11 +201,38 @@ resource "aws_security_group" "outbound_ecs_tasks_sg" {
   }
 
   egress {
-    description = "Allow All Outbound"
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 53
+    to_port = 53
+    protocol = "udp"
+    cidr_blocks = [local.mhs_vpc_cidr_block]
+    description = "MHS outbound egress to DNS"
+  }
+
+  egress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [var.spine_cidr]
+    description = "MHS outbound egress to SDS and spine"
+  }
+
+  egress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    prefix_list_ids = [
+      local.mhs_dynamodb_vpc_endpoint_prefix_list_id,
+      local.mhs_s3_vpc_endpoint_prefix_list_id
+    ]
+    description = "MHS outbound egress to AWS VPC endpoints for dynamodb and s3 (gateway type)"
+  }
+
+  egress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [local.mhs_vpc_cidr_block]
+    description = "MHS outbound egress to MHS VPC"
   }
 
   tags = {
