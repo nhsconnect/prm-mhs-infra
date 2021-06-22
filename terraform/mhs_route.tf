@@ -1,3 +1,16 @@
+locals {
+  sgs_with_service_to_mhs_route = [aws_security_group.mhs_route_alb.id,
+    aws_security_group.alb_to_mhs_route_ecs.id,
+    aws_security_group.service_to_mhs_route.id,
+    aws_security_group.vpn_to_mhs_route.id,
+    aws_security_group.gocd_to_mhs_route.id]
+  sgs_without_service_to_mhs_route = [  aws_security_group.mhs_route_alb.id,
+    aws_security_group.alb_to_mhs_route_ecs.id,
+    aws_security_group.vpn_to_mhs_route.id,
+    aws_security_group.gocd_to_mhs_route.id]
+  route_alb_sgs = var.deploy_service_to_mhs_sg ? local.sgs_with_service_to_mhs_route : local.sgs_without_service_to_mhs_route
+}
+
 resource "aws_ecs_cluster" "mhs_route_cluster" {
   name = "${var.environment}-${var.cluster_name}-mhs-route-cluster"
 
@@ -154,7 +167,7 @@ resource "aws_security_group" "route_ecs_tasks_sg" {
     protocol = "tcp"
     from_port = 80
     to_port = 80
-    security_groups = [aws_security_group.route_alb.id]
+    security_groups = [aws_security_group.mhs_route_alb.id]
   }
 
   egress {
@@ -212,14 +225,116 @@ resource "aws_lb" "route_alb" {
   internal = true
   load_balancer_type = "application"
   subnets = local.mhs_private_subnet_ids
-  security_groups = [
-    aws_security_group.route_alb.id
-  ]
+  security_groups = local.route_alb_sgs
 
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
     Environment = var.environment
     CreatedBy = var.repo_name
+  }
+}
+
+# Exists to be referred by the ECS task of mhs route
+resource "aws_security_group" "mhs_route_alb" {
+  name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
+  description = "mhs route ALB security group"
+  vpc_id      = local.mhs_vpc_id
+
+  egress {
+    from_port = 80
+    to_port = 80
+    cidr_blocks = [local.mhs_vpc_cidr_block]
+    protocol = "tcp"
+    description = "ALB route egress to MHS VPC"
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "alb_to_mhs_route_ecs" {
+  name        = "${var.environment}-${var.cluster_name}-alb-to-mhs-route-ecs"
+  description = "Allows mhs route ALB connections to mhs route component task"
+  vpc_id      = local.mhs_vpc_id
+
+  egress {
+    description = "Allow outbound connections to mhs route ECS Task"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    security_groups = [aws_security_group.route_ecs_tasks_sg.id]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-alb-to-mhs-route-ecs"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "service_to_mhs_route" {
+  name        = "${var.environment}-${var.cluster_name}-service-to-mhs-route"
+  description = "controls access from repo services to MHS route"
+  vpc_id      = local.mhs_vpc_id
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-service-to-mhs-route"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "service_to_mhs_route" {
+  count = var.deploy_service_to_mhs_sg ? 1 : 0
+  name = "/repo/${var.environment}/output/${var.repo_name}/service-to-mhs-route-sg-id"
+  type = "String"
+  value = aws_security_group.service_to_mhs_route.id
+  tags = {
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "vpn_to_mhs_route" {
+  name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-route"
+  description = "controls access from vpn to MHS route"
+  vpc_id      = local.mhs_vpc_id
+
+  ingress {
+    description = "Allow vpn to access mhs-route ALB"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    security_groups = [data.aws_ssm_parameter.vpn_sg_id.value]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-route"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "gocd_to_mhs_route" {
+  name        = "${var.environment}-${var.cluster_name}-gocd-to-mhs-route"
+  description = "controls access from gocd to MHS route"
+  vpc_id      = local.mhs_vpc_id
+
+  ingress {
+    description = "Allow gocd to access mhs-route ALB"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    security_groups = [data.aws_ssm_parameter.gocd_sg_id.value]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-gocd-to-mhs-route"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
   }
 }
 
@@ -256,46 +371,6 @@ resource "aws_lb_listener" "route_alb_listener" {
   default_action {
     type = "forward"
     target_group_arn = aws_lb_target_group.route_alb_target_group.arn
-  }
-}
-
-# MHS route load balancer security group
-resource "aws_security_group" "route_alb" {
-  name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
-  description = "The security group used to control traffic for the MHS routing component Application Load Balancer."
-  vpc_id = local.mhs_vpc_id
-
-  # Allow inbound traffic from MHS VPC
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    description = "ALB route ingress from MHS VPC"
-  }
-
-  # TODO: Restrict the ingress cidr block to deductions private
-  # Allow inbound traffic from MHS clients
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [var.allowed_mhs_clients]
-    description = "ALB route ingress from MHS clients"
-  }
-
-  egress {
-    from_port = 80
-    to_port = 80
-    cidr_blocks = [local.mhs_vpc_cidr_block]
-    protocol = "tcp"
-    description = "ALB route egress to MHS VPC"
-  }
-
-  tags = {
-    Name = "${var.environment}-alb-route-sg"
-    Environment = var.environment
-    CreatedBy = var.repo_name
   }
 }
 

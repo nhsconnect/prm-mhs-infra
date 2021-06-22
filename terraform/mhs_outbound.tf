@@ -286,7 +286,6 @@ data "aws_ssm_parameter" "gocd_sg_id" {
   name = "/repo/${var.environment}/user-input/external/gocd-agent-sg-id"
 }
 
-
 resource "aws_lb_target_group" "outbound_alb_target_group" {
   name = "${var.environment}-${var.cluster_name}-mhs-outbound"
   port = 80
@@ -435,4 +434,13 @@ resource "aws_route53_record" "mhs_outbound_cert_validation_record" {
 resource "aws_acm_certificate_validation" "mhs_outbound_cert_validation" {
   certificate_arn = aws_acm_certificate.mhs_outbound_cert.arn
   validation_record_fqdns = [for record in aws_route53_record.mhs_outbound_cert_validation_record : record.fqdn]
+}
+
+resource "aws_security_group_rule" "mhs_outbound_to_mhs_route" {
+  type = "ingress"
+  protocol = "TCP"
+  from_port = 443
+  to_port = 443
+  security_group_id = aws_security_group.service_to_mhs_route.id
+  source_security_group_id = aws_security_group.outbound_ecs_tasks_sg.id
 }
