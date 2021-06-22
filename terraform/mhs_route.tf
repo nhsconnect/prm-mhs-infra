@@ -173,16 +173,6 @@ resource "aws_security_group" "mhs_route" {
   }
 }
 
-resource "aws_security_group_rule" "elasticache_ingress_from_mhs_route" {
-  type = "ingress"
-  from_port = 6379
-  to_port = 6379
-  protocol = "tcp"
-  security_group_id = aws_security_group.sds_cache.id
-  source_security_group_id = aws_security_group.mhs_route.id
-  description = "Elasticache ingress from MHS route"
-}
-
 resource "aws_lb" "route_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-route-alb"
   internal = true

@@ -32,6 +32,14 @@ resource "aws_security_group" "sds_cache" {
   description = "The security group used to control traffic for the SDS cache endpoint."
   vpc_id = local.mhs_vpc_id
 
+  ingress {
+    description = "Elasticache ingress from MHS route"
+    from_port = 6379
+    to_port = 6379
+    protocol = "tcp"
+    security_groups = [aws_security_group.mhs_route.id]
+  }
+
   tags = {
     Name = "${var.environment}-sds-cache-sg"
     Environment = var.environment
