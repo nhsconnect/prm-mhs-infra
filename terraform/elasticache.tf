@@ -32,17 +32,18 @@ resource "aws_security_group" "sds_cache" {
   description = "The security group used to control traffic for the SDS cache endpoint."
   vpc_id = local.mhs_vpc_id
 
-  ingress {
-    description = "Elasticache ingress from MHS route"
-    from_port = 6379
-    to_port = 6379
-    protocol = "tcp"
-    security_groups = [aws_security_group.route_ecs_tasks_sg.id]
-  }
-
   tags = {
     Name = "${var.environment}-sds-cache-sg"
     Environment = var.environment
     CreatedBy = var.repo_name
   }
+}
+
+resource "aws_security_group_rule" "sds_cache_ingress_from_mhs_route" {
+  type = "ingress"
+  from_port = 6379
+  to_port = 6379
+  protocol = "tcp"
+  security_group_id = aws_security_group.sds_cache.id
+  source_security_group_id = aws_security_group.route_ecs_tasks_sg.id
 }
