@@ -14,6 +14,14 @@ data "aws_subnet_ids" "mhs_private" {
   }
 }
 
+data "aws_subnet_ids" "mhs_public" {
+  vpc_id = local.mhs_vpc_id
+  filter {
+    name   = "tag:Name"
+    values = ["${var.environment}-${var.cluster_name}-mhs-public-subnet-*"]
+  }
+}
+
 data "aws_ssm_parameter" "dns_ip_address_0" {
     name = "/repo/${var.environment}/output/prm-deductions-infra/${var.cluster_name}-dns-ip-0"
 }
