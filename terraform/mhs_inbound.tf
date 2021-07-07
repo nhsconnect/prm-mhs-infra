@@ -303,11 +303,11 @@ resource "aws_security_group" "mhs_inbound_security_group" {
 # to passthrough the SSL traffic.
 resource "aws_lb" "inbound_nlb" {
   name = "${var.environment}-${var.cluster_name}-mhs-inbound"
-  internal = var.environment == "test" ? false : true
+  internal = var.is_public_nlb
   load_balancer_type = "network"
   enable_cross_zone_load_balancing = true
   enable_deletion_protection = false
-  subnets = var.environment == "test" ? data.aws_subnet_ids.mhs_public.ids : local.mhs_private_subnet_ids
+  subnets = var.is_public_nlb ? data.aws_subnet_ids.mhs_public.ids : local.mhs_private_subnet_ids
 
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-inbound"
@@ -324,7 +324,7 @@ resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
   type = "A"
   ttl = 600
 
-  records = var.environment == "test" ? aws_lb.inbound_nlb.subnet_mapping.*.private_ipv4_address : aws_lb.inbound_nlb.subnet_mapping.*.private_ipv4_address
+  records = var.is_public_nlb ? aws_lb.inbound_nlb.subnet_mapping.*.private_ipv4_address : aws_lb.inbound_nlb.subnet_mapping.*.private_ipv4_address
 }
 
 # Target group for the network load balancer for MHS inbound port 443
