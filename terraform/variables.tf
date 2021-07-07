@@ -120,3 +120,5 @@ variable "spine_org_code" {}
 variable "deploy_service_to_mhs_sg" {}
 
 variable "is_public_nlb" {}
+
+variable "mhs_vpc_cidr_block" {}

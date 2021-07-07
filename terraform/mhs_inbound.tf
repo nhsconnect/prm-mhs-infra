@@ -208,16 +208,6 @@ resource "aws_ecs_service" "mhs_inbound_service" {
     target_group_arn = aws_lb_target_group.inbound_https_nlb_target_group.arn
   }
 
-  load_balancer {
-    container_name = jsondecode(aws_ecs_task_definition.mhs_inbound_task.container_definitions)[0].name
-    container_port = 80
-    target_group_arn = aws_lb_target_group.inbound_http_nlb_target_group.arn
-  }
-
-  depends_on = [
-    aws_lb.inbound_nlb
-  ]
-
   # Preserve the autoscaled instance count when this service is updated
   lifecycle {
     ignore_changes = [
@@ -302,18 +292,57 @@ resource "aws_security_group" "mhs_inbound_security_group" {
 # have to use a network load balancer here and not an application load balancer,
 # to passthrough the SSL traffic.
 resource "aws_lb" "inbound_nlb" {
-  name = "${var.environment}-${var.cluster_name}-mhs-inbound"
-  internal = var.is_public_nlb
+  count = var.is_public_nlb ? 0 : 1
+  name = "${var.environment}-${var.cluster_name}-public-mhs-inbound"
+  internal = true
   load_balancer_type = "network"
   enable_cross_zone_load_balancing = true
   enable_deletion_protection = false
-  subnets = var.is_public_nlb ? data.aws_subnet_ids.mhs_public.ids : local.mhs_private_subnet_ids
+  subnets = local.mhs_private_subnet_ids
 
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-inbound"
     Environment = var.environment
     CreatedBy = var.repo_name
   }
+}
+
+resource "aws_lb" "public_inbound_nlb" {
+  count = var.is_public_nlb ? 1 : 0
+  name = "${var.environment}-${var.cluster_name}-public-mhs-inbound"
+  internal = false
+  load_balancer_type = "network"
+  enable_cross_zone_load_balancing = true
+  enable_deletion_protection = false
+  subnet_mapping {
+    subnet_id     = local.mhs_public_subnet_ids[0]
+    allocation_id = aws_eip.mhs_inbound_nlb_public_ip[0].id
+  }
+  subnet_mapping {
+    subnet_id     = local.mhs_public_subnet_ids[1]
+    allocation_id = aws_eip.mhs_inbound_nlb_public_ip[1].id
+  }
+  subnet_mapping {
+    subnet_id     = local.mhs_public_subnet_ids[2]
+    allocation_id = aws_eip.mhs_inbound_nlb_public_ip[2].id
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-inbound"
+    Environment = var.environment
+    CreatedBy = var.repo_name
+  }
+}
+
+resource "aws_eip" "mhs_inbound_nlb_public_ip" {
+  count = 3
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-mhs-inbound-public-ip"
+  }
+}
+
+locals {
+  elb_ips = tolist(aws_eip.mhs_inbound_nlb_public_ip.*.public_ip)
 }
 
 # Public DNS record for the MHS inbound component
@@ -324,7 +353,7 @@ resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
   type = "A"
   ttl = 600
 
-  records = var.is_public_nlb ? aws_lb.inbound_nlb.subnet_mapping.*.private_ipv4_address : aws_lb.inbound_nlb.subnet_mapping.*.private_ipv4_address
+  records = var.is_public_nlb ? local.elb_ips : aws_lb.inbound_nlb[0].subnet_mapping.*.private_ipv4_address
 }
 
 # Target group for the network load balancer for MHS inbound port 443
@@ -350,32 +379,9 @@ resource "aws_lb_target_group" "inbound_https_nlb_target_group" {
   }
 }
 
-# Target group for the network load balancer for MHS inbound port 80
-# The MHS inbound ECS service registers it's tasks here.
-resource "aws_lb_target_group" "inbound_http_nlb_target_group" {
-  name = "${var.environment}-${var.cluster_name}-mhs-in-http" # "name" cannot be longer than 32 characters
-  port = 80
-  protocol = "TCP"
-  target_type = "ip"
-  vpc_id = local.mhs_vpc_id
-  deregistration_delay = var.deregistration_delay
-
-  health_check {
-    protocol = "HTTP"
-    port = 80
-    path = "/healthcheck"
-  }
-
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-inbound-http"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-}
-
 # HTTPS Listener for MHS inbound load balancer that forwards requests to the correct target group
 resource "aws_lb_listener" "inbound_nlb_listener" {
-  load_balancer_arn = aws_lb.inbound_nlb.arn
+  load_balancer_arn = var.is_public_nlb ? aws_lb.public_inbound_nlb[0].arn : aws_lb.inbound_nlb[0].arn
   port = 443
   protocol = "TCP"
 
@@ -385,26 +391,14 @@ resource "aws_lb_listener" "inbound_nlb_listener" {
   }
 }
 
-# HTTP Listener for MHS inbound load balancer that forwards requests to the correct target group
-resource "aws_lb_listener" "inbound_http_nlb_listener" {
-  load_balancer_arn = aws_lb.inbound_nlb.arn
-  port = 80
-  protocol = "TCP"
-
-  default_action {
-    type = "forward"
-    target_group_arn = aws_lb_target_group.inbound_http_nlb_target_group.arn
-  }
-}
-
 resource "aws_route53_record" "mhs_inbound_load_balancer_record" {
   zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
   name = "inbound-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
   type = "A"
 
   alias {
-    name = aws_lb.inbound_nlb.dns_name
-    zone_id = aws_lb.inbound_nlb.zone_id
+    name = var.is_public_nlb ? aws_lb.public_inbound_nlb[0].dns_name : aws_lb.inbound_nlb[0].dns_name
+    zone_id = var.is_public_nlb ? aws_lb.public_inbound_nlb[0].zone_id : aws_lb.inbound_nlb[0].zone_id
     evaluate_target_health = false
   }
 }
