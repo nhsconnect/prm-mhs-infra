@@ -13,7 +13,7 @@ recipient_ods_code                  = "B86041" # Not enforced in opentest
 spine_cidr = "0.0.0.0/0" # FIXME: narrow down to only the services that we talk to
 sds_port                            = 636
 spineroutelookup_service_sds_url    = "ldaps://ldap.nis1.national.ncrs.nhs.uk:636" # MUST BE AN IP in dev environment
-mhs_forward_reliable_endpoint_url  = "https://msg.int.spine2.ncrs.nhs.uk/reliablemessaging/reliablerequest"
+mhs_forward_reliable_endpoint_url  = "https://msg.intspineservices.nhs.uk/reliablemessaging/reliablerequest"
 spineroutelookup_service_search_base = "ou=services,o=nhs"
 spineroutelookup_service_disable_sds_tls = "False"
 mhs_log_level                       = "DEBUG"
