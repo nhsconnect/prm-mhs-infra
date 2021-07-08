@@ -213,8 +213,12 @@ case "${command}" in
       ;;
   _csr)
       check_env
-      fqdn="inbound-b86041.mhs.$NHS_ENVIRONMENT.non-prod.patient-deductions.nhs.uk"
-      generate_csr "inbound-b86041-mhs-$NHS_ENVIRONMENT" $fqdn
+      if [ -z $ODS_CODE ]; then
+        echo "Please specify ODS_CODE"
+        exit 4
+      fi
+      fqdn="in-$ODS_CODE.mhs.$NHS_ENVIRONMENT.non-prod.patient-deductions.nhs.uk"
+      generate_csr "in-$ODS_CODE-mhs-$NHS_ENVIRONMENT" $fqdn
       echo "The CSR has to be sent together with endpoint registration. Use the form below or ask endpoint admin to register it"
       echo "https://digital.nhs.uk/forms/combined-endpoint-and-service-registration-request"
       ;;
