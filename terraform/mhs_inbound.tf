@@ -293,7 +293,7 @@ resource "aws_security_group" "mhs_inbound_security_group" {
 # to passthrough the SSL traffic.
 resource "aws_lb" "inbound_nlb" {
   count = var.is_public_nlb ? 0 : 1
-  name = "${var.environment}-${var.cluster_name}-public-mhs-inbound"
+  name = "${var.environment}-${var.cluster_name}-mhs-inbound"
   internal = true
   load_balancer_type = "network"
   enable_cross_zone_load_balancing = true
@@ -309,7 +309,7 @@ resource "aws_lb" "inbound_nlb" {
 
 resource "aws_lb" "public_inbound_nlb" {
   count = var.is_public_nlb ? 1 : 0
-  name = "${var.environment}-${var.cluster_name}-public-mhs-inbound"
+  name = "${var.environment}-${var.cluster_name}-mhs-inbound"
   internal = false
   load_balancer_type = "network"
   enable_cross_zone_load_balancing = true

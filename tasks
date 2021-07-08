@@ -159,13 +159,18 @@ function get_aws_value {
   echo $json | jq -r ".Parameter.Value"
 }
 
-function configure_mhs_inbound_url {
+function configure_mhs_inbound_host_name {
   check_env
   if [[ $NHS_ENVIRONMENT == "dev" ]]; then
-    export MHS_INBOUND_URL=http://inbound-opentest.mhs.dev.non-prod.patient-deductions.nhs.uk
+    export MHS_HOST_NAME=inbound-opentest.mhs.dev.non-prod.patient-deductions.nhs.uk
   else
-    export MHS_INBOUND_URL=http://inbound-b86041.mhs.test.non-prod.patient-deductions.nhs.uk
+    export MHS_HOST_NAME=inbound-b86041.mhs.test.non-prod.patient-deductions.nhs.uk
   fi
+}
+
+function check_mhs_inbound_connectivity() {
+    if nc -w5 -z -v ${MHS_HOST_NAME} 443; then exit 0;
+    else exit 1; fi
 }
 
 command="$1"
@@ -176,9 +181,17 @@ case "${command}" in
       ;;
   test)
       check_env
-      configure_mhs_inbound_url
       export NODE_EXTRA_CA_CERTS=certs/deductions.crt
       dojo -c Dojofile-node "./tasks _test"
+      ./tasks test_inbound
+      ;;
+  _test_inbound)
+      check_mhs_inbound_connectivity
+      ;;
+  test_inbound)
+      check_env
+      configure_mhs_inbound_host_name
+      dojo "./tasks _test_inbound"
       ;;
   tf)
       check_env
