@@ -41,20 +41,13 @@ common:
           - ./tasks wait_ecs test_harness
 
 pipelines:
-  "prm-mhs-infra-opentest":
+  "prm-mhs-infra.dev":
     group: mhs
     label_template: "${git[:8]}"
     materials:
       git:
         type: configrepo
         destination: prm-mhs-infra
-      integration_adaptors:
-        git: https://github.com/nhsconnect/prm-deductions-integration-adaptors.git
-        branch: deductions
-        destination: integration-adaptors
-      docker:
-        pipeline: mhs-docker-images
-        stage: build
       mhs_docker:
         pipeline: prm-repo-mhs
         stage: build_docker
@@ -100,25 +93,15 @@ pipelines:
                       - -c
                       - ./tasks test
 
-  "prm-mhs-infra-ptl-integration":
+  "prm-mhs-infra.test":
     group: mhs
     label_template: "${git[:8]}"
     materials:
       git:
         type: configrepo
         destination: prm-mhs-infra
-      integration_adaptors:
-        git: https://github.com/nhsconnect/prm-deductions-integration-adaptors.git
-        branch: deductions
-        destination: integration-adaptors
-      system_integration:
-        git: https://github.com/nhsconnect/prm-deductions-mhs-system-integration.git
-        destination: system-integration
-      docker:
-        pipeline: mhs-docker-images
-        stage: build
       dev_env:
-        pipeline: prm-mhs-infra-opentest
+        pipeline: prm-mhs-infra.dev
         stage: test
       mhs_docker:
         pipeline: prm-repo-mhs
@@ -128,6 +111,57 @@ pipelines:
         stage: wait_dns_test
     environment_variables:
       NHS_ENVIRONMENT: test
+    stages:
+      - promote_docker_image:
+          resources:
+            - docker
+          clean_workspace: true
+          tasks:
+            - exec:
+                command: /bin/bash
+                working_directory: prm-mhs-infra
+                arguments:
+                  - -c
+                  - ./tasks promote_docker_image
+      - deploy:
+          clean_workspace: true
+          jobs:
+            deploy:
+              resources:
+                - docker
+              tasks:
+                - *repo_deploy_tasks
+      - test:
+          clean_workspace: true
+          jobs:
+            test:
+              resources:
+                - docker
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    working_directory: prm-mhs-infra
+                    arguments:
+                      - -c
+                      - ./tasks test
+  "prm-mhs-infra.pre-prod":
+    group: mhs
+    label_template: "${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+        destination: prm-mhs-infra
+      dev_env:
+        pipeline: prm-mhs-infra.test
+        stage: test
+      mhs_docker:
+        pipeline: prm-repo-mhs
+        stage: build_docker
+      deductions_infra:
+        pipeline: prm-deductions-infra
+        stage: wait_dns_pre_prod
+    environment_variables:
+      NHS_ENVIRONMENT: pre-prod
     stages:
       - promote_docker_image:
           resources:

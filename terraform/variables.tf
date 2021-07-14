@@ -96,8 +96,6 @@ variable "build_id" {
   description = "ID used to identify the current build such as a commit sha."
 }
 
-variable "fork_build_id" {}
-
 variable "deregistration_delay" {
   default = 30
 }
