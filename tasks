@@ -148,22 +148,14 @@ function docker_login {
   eval $(dojo "aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION")
 }
 
-function get_aws_value {
-  secret_id=$1
-  json=$(aws ssm get-parameter --region $AWS_DEFAULT_REGION --name $secret_id)
-  if [ $? != 0 ]; then
-    >&2 echo "Failed to obtain SSM value: $secret_id"
-    exit 5
-  fi
-  echo $json | jq -r ".Parameter.Value"
-}
 
 function configure_mhs_inbound_host_name {
   check_env
   if [[ $NHS_ENVIRONMENT == "dev" ]]; then
-    export MHS_HOST_NAME=inbound-opentest.mhs.dev.non-prod.patient-deductions.nhs.uk
+    export MHS_HOST_NAME=in-opentest.mhs.dev.non-prod.patient-deductions.nhs.uk
   else
-    export MHS_HOST_NAME=inbound-b86041.mhs.test.non-prod.patient-deductions.nhs.uk
+    ods_code=$(get_aws_ssm_secret "/repo/${NHS_ENVIRONMENT}/user-input/external/gp2gp-adaptor-deductions-ods-code")
+    export MHS_HOST_NAME=in-${ods_code}.mhs.test.non-prod.patient-deductions.nhs.uk
   fi
 }
 

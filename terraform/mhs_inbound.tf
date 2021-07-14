@@ -349,7 +349,7 @@ locals {
 resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
   count = var.setup_public_dns_record == "true" ? 1 : 0
   zone_id = data.aws_ssm_parameter.environment_public_zone_id.value
-  name = "inbound-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
+  name = "in-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
   type = "A"
   ttl = 600
 
@@ -393,7 +393,7 @@ resource "aws_lb_listener" "inbound_nlb_listener" {
 
 resource "aws_route53_record" "mhs_inbound_load_balancer_record" {
   zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
-  name = "inbound-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
+  name = "in-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
   type = "A"
 
   alias {
