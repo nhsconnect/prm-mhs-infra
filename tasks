@@ -155,7 +155,7 @@ function configure_mhs_inbound_host_name {
     export MHS_HOST_NAME=in-opentest.mhs.dev.non-prod.patient-deductions.nhs.uk
   else
     ods_code=$(get_aws_ssm_secret "/repo/${NHS_ENVIRONMENT}/user-input/external/gp2gp-adaptor-deductions-ods-code")
-    export MHS_HOST_NAME=in-${ods_code}.mhs.test.non-prod.patient-deductions.nhs.uk
+    export MHS_HOST_NAME=in-${ods_code}.mhs.$NHS_ENVIRONMENT.non-prod.patient-deductions.nhs.uk
   fi
 }
 
