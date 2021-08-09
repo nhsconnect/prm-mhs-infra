@@ -26,24 +26,22 @@ resource "aws_iam_role" "mhs-ecs" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "ssm-readonly-attach" {
-  role       = aws_iam_role.mhs-ecs.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "ecs-task-exec-attach" {
-  role       = aws_iam_role.mhs-ecs.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
 data "aws_iam_policy_document" "read-secrets" {
   statement {
     actions = [
       "ssm:GetParameter",
     ]
-
     resources = [
-      "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/*",
+      data.aws_ssm_parameter.mq-app-username.arn,
+      data.aws_ssm_parameter.mq-app-password.arn,
+      data.aws_ssm_parameter.amqp-endpoint-0.arn,
+      data.aws_ssm_parameter.amqp-endpoint-1.arn,
+      data.aws_ssm_parameter.party-key.arn,
+      data.aws_ssm_parameter.client-cert.arn,
+      data.aws_ssm_parameter.client-key.arn,
+      data.aws_ssm_parameter.outbound-ca-certs.arn,
+      data.aws_ssm_parameter.route-ca-certs.arn,
+      data.aws_ssm_parameter.amqp-endpoint-0.arn
     ]
   }
 
@@ -53,7 +51,7 @@ data "aws_iam_policy_document" "read-secrets" {
     ]
 
     resources = [
-      "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:/repo/*"
+      data.aws_secretsmanager_secret.inbound-ca-certs.arn
     ]
   }
 }
@@ -66,6 +64,63 @@ resource "aws_iam_policy" "read-secrets" {
 resource "aws_iam_role_policy_attachment" "ecs-read-secrets-attach" {
   role       = aws_iam_role.mhs-ecs.name
   policy_arn = aws_iam_policy.read-secrets.arn
+}
+
+resource "aws_iam_policy" "ecr_policy" {
+  name   = "mhs-${var.environment}-${var.cluster_name}-ecr"
+  policy = data.aws_iam_policy_document.ecr_policy_doc.json
+}
+
+resource "aws_iam_policy" "logs_policy" {
+  name   = "mhs-${var.environment}-${var.cluster_name}-logs"
+  policy = data.aws_iam_policy_document.logs_policy_doc.json
+}
+
+data "aws_iam_policy_document" "ecr_policy_doc" {
+  statement {
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage"
+    ]
+
+    resources = [
+      "arn:aws:ecr:${var.region}:${local.account_id}:repository/mhs-*"
+
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken"
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "logs_policy_doc" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "arn:aws:logs:${var.region}:${local.account_id}:log-group:/ecs/${var.environment}-${var.cluster_name}-mhs-*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_policy_attach" {
+  role       = aws_iam_role.mhs-ecs.name
+  policy_arn = aws_iam_policy.ecr_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "logs_policy_attach" {
+  role       = aws_iam_role.mhs-ecs.name
+  policy_arn = aws_iam_policy.logs_policy.arn
 }
 
 data "aws_iam_policy_document" "ecs-assume-role-policy" {
