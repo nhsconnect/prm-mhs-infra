@@ -418,7 +418,7 @@ locals {
       value = var.enable_sds_fhir_api ? data.aws_ssm_parameter.sds_api_url[0].value : ""
     }
   ]
-  mhs_outbound_base_secrets = [
+  mhs_outbound_base_secrets = var.enable_sds_fhir_api ? [
     {
       name = "MHS_SECRET_PARTY_KEY"
       valueFrom = local.party_key_arn
@@ -437,7 +437,24 @@ locals {
     },
     {
       name = "MHS_SDS_API_KEY"
-      value = var.enable_sds_fhir_api ? data.aws_ssm_parameter.sds_api_key[0].value : ""
+      value = data.aws_ssm_parameter.sds_api_key[0].value
+    }
+  ] : [
+    {
+      name = "MHS_SECRET_PARTY_KEY"
+      valueFrom = local.party_key_arn
+    },
+    {
+      name = "MHS_SECRET_CLIENT_CERT"
+      valueFrom = local.client_cert_arn
+    },
+    {
+      name = "MHS_SECRET_CLIENT_KEY"
+      valueFrom = local.client_key_arn
+    },
+    {
+      name = "MHS_SECRET_CA_CERTS"
+      valueFrom = local.outbound_ca_certs_arn
     }
   ]
 }
