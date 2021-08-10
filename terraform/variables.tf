@@ -120,3 +120,7 @@ variable "deploy_service_to_mhs_sg" {}
 variable "is_public_nlb" {}
 
 variable "mhs_vpc_cidr_block" {}
+
+variable "mhs_outbound_lookup_method" {}
+
+variable "enable_sds_fhir_api" {}

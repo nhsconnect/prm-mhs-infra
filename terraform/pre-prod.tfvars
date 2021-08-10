@@ -26,3 +26,5 @@ mhs_resynchroniser_interval = "1"
 spine_org_code = "YES"
 is_public_nlb = true
 mhs_vpc_cidr_block = "10.36.0.0/16"
+mhs_outbound_lookup_method = "SDS_API"
+enable_sds_fhir_api = true

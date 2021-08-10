@@ -408,6 +408,14 @@ locals {
     {
       name = "MHS_FORWARD_RELIABLE_ENDPOINT_URL"
       value = var.mhs_forward_reliable_endpoint_url
+    },
+    {
+      name = "MHS_OUTBOUND_ROUTING_LOOKUP_METHOD"
+      value = var.mhs_outbound_lookup_method
+    },
+    {
+      name = "MHS_SDS_API_URL"
+      value = var.enable_sds_fhir_api ? data.aws_ssm_parameter.sds_api_url[0].value : ""
     }
   ]
   mhs_outbound_base_secrets = [
@@ -426,6 +434,10 @@ locals {
     {
       name = "MHS_SECRET_CA_CERTS"
       valueFrom = local.outbound_ca_certs_arn
+    },
+    {
+      name = "MHS_SDS_API_KEY"
+      value = var.enable_sds_fhir_api ? data.aws_ssm_parameter.sds_api_key[0].value : ""
     }
   ]
 }
@@ -470,4 +482,14 @@ resource "aws_security_group_rule" "mhs_outbound_to_mhs_route" {
   to_port = 443
   security_group_id = aws_security_group.service_to_mhs_route.id
   source_security_group_id = aws_security_group.outbound_ecs_tasks_sg.id
+}
+
+data "aws_ssm_parameter" "sds_api_url" {
+  count = var.enable_sds_fhir_api ? 1 : 0
+  name = "/repo/${var.environment}/user-input/external/sds-fhir-url"
+}
+
+data "aws_ssm_parameter" "sds_api_key" {
+  count = var.enable_sds_fhir_api ? 1 : 0
+  name = "/repo/${var.environment}/user-input/external/sds-fhir-api-key"
 }
