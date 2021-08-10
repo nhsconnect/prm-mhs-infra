@@ -29,7 +29,7 @@ resource "aws_iam_role" "mhs-ecs" {
 data "aws_iam_policy_document" "read-secrets" {
   statement {
     actions = [
-      "ssm:GetParameter",
+      "ssm:Get*",
     ]
     resources = [
       data.aws_ssm_parameter.mq-app-username.arn,
