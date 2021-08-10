@@ -41,7 +41,6 @@ data "aws_iam_policy_document" "read-secrets" {
       data.aws_ssm_parameter.client-key.arn,
       data.aws_ssm_parameter.outbound-ca-certs.arn,
       data.aws_ssm_parameter.route-ca-certs.arn,
-      data.aws_ssm_parameter.amqp-endpoint-0.arn,
       data.aws_ssm_parameter.dns_ip_address_0.arn,
       data.aws_ssm_parameter.dns_ip_address_1.arn
     ]
