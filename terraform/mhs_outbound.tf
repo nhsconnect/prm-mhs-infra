@@ -437,7 +437,7 @@ locals {
     },
     {
       name = "MHS_SDS_API_KEY"
-      value = data.aws_ssm_parameter.sds_api_key[0].value
+      valueFrom = data.aws_ssm_parameter.sds_api_key[0].arn
     }
   ] : [
     {
