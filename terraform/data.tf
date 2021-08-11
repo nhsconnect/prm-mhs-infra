@@ -18,7 +18,7 @@ data "aws_subnet_ids" "mhs_public" {
   vpc_id = local.mhs_vpc_id
   filter {
     name   = "tag:Name"
-    values = ["${var.environment}-${var.cluster_name}-mhs-public-subnet-*"]
+    values = ["${var.environment}-${var.cluster_name}-mhs-public-subnet-inbound-*"]
   }
 }
 
