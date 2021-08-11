@@ -25,6 +25,6 @@ mhs_resynchroniser_max_retries="20"
 mhs_resynchroniser_interval="1"
 spine_org_code="YES"
 is_public_nlb = true
-mhs_vpc_cidr_block = "10.239.68.0/24"
+mhs_vpc_cidr_block = "10.239.68.0/23"
 mhs_outbound_lookup_method = "SPINE_ROUTE_LOOKUP"
 enable_sds_fhir_api = false
