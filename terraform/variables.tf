@@ -70,6 +70,10 @@ variable "mhs_outbound_http_proxy" {
   default = ""
 }
 
+variable "mhs_outbound_http_proxy_port" {
+  default = ""
+}
+
 variable "mhs_resync_initial_delay" {
   description = "The delay before the first poll to the sync async store after receiving an acknowledgement from Spine"
   default = 0.150
