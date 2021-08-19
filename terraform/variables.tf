@@ -87,6 +87,10 @@ variable "mhs_forward_reliable_endpoint_url" {
   description = "The URL to communicate with Spine for Forward Reliable messaging from the outbound service"
 }
 
+variable "mhs_synchronous_endpoint_url" {
+  description = "The URL to communicate with Spine for synchronous messaging"
+}
+
 variable "mhs_spine_request_max_size" {
   description = "The maximum size of the request body (in bytes) that MHS outbound sends to Spine. This should be set minus any HTTP headers and other content in the HTTP packets sent to Spine."
   default = 4999600 # This is 5 000 000 - 400 ie 5MB - 400 bytes, roughly the size of the rest of the HTTP packet

@@ -410,6 +410,10 @@ locals {
       value = var.mhs_forward_reliable_endpoint_url
     },
     {
+      name = "MHS_SYNCHRONOUS_ENDPOINT_URL"
+      value = var.mhs_synchronous_endpoint_url
+    },
+    {
       name = "MHS_OUTBOUND_ROUTING_LOOKUP_METHOD"
       value = var.mhs_outbound_lookup_method
     },
