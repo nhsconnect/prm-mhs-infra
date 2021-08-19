@@ -60,10 +60,6 @@ resource "aws_ecs_task_definition" "mhs_outbound_task" {
           value = var.mhs_outbound_http_proxy
         },
         {
-          name = "MHS_OUTBOUND_HTTP_PROXY_PORT"
-          value = var.mhs_outbound_http_proxy_port
-        },
-        {
           name = "MHS_RESYNC_INITIAL_DELAY"
           value = var.mhs_resync_initial_delay
         }
