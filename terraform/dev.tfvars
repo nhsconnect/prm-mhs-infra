@@ -13,6 +13,7 @@ setup_public_dns_record = "false"
 sds_port                            = 389
 spineroutelookup_service_sds_url    = "ldap://192.168.128.11:389"
 mhs_forward_reliable_endpoint_url  = "https://msg.opentest.hscic.gov.uk/reliablemessaging/forwardreliable"
+mhs_asynchronous_reliable_endpoint_url  = "https://msg.opentest.hscic.gov.uk/reliablemessaging/forwardreliable"
 mhs_synchronous_endpoint_url = "https://msg.opentest.hscic.gov.uk/sync-service"
 spineroutelookup_service_search_base = "ou=services,o=nhs"
 spineroutelookup_service_disable_sds_tls = "True"

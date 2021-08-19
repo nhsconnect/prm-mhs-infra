@@ -87,6 +87,8 @@ variable "mhs_forward_reliable_endpoint_url" {
   description = "The URL to communicate with Spine for Forward Reliable messaging from the outbound service"
 }
 
+variable "mhs_asynchronous_reliable_endpoint_url" {}
+
 variable "mhs_synchronous_endpoint_url" {
   description = "The URL to communicate with Spine for synchronous messaging"
 }
