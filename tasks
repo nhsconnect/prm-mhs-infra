@@ -169,15 +169,14 @@ function check_mhs_inbound_connectivity() {
 
 command="$1"
 case "${command}" in
-  _test)
+  _test_route)
       npm install
-      npm run test
+      npm run test:route
       ;;
-  test)
+  test_route)
       check_env
       export NODE_EXTRA_CA_CERTS=certs/deductions.crt
-      dojo -c Dojofile-node "./tasks _test"
-      ./tasks test_inbound
+      dojo -c Dojofile-node "./tasks _test_route"
       ;;
   _test_inbound)
       check_mhs_inbound_connectivity
@@ -187,6 +186,16 @@ case "${command}" in
       assume_environment_role $NHS_ENVIRONMENT
       configure_mhs_inbound_host_name
       dojo "./tasks _test_inbound"
+      ;;
+  _test)
+      npm install
+      npm run test:outbound
+      ;;
+  test)
+      check_env
+      export NODE_EXTRA_CA_CERTS=certs/deductions.crt
+      dojo -c Dojofile-node "./tasks _test"
+      ./tasks test_inbound
       ;;
   tf)
       check_env

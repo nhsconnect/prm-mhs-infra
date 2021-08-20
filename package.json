@@ -7,7 +7,8 @@
     "url": "git+https://github.com/nhsconnect/prm-mhs-infra.git"
   },
   "scripts": {
-    "test": "jest test/"
+    "test:outbound": "jest test/mhs-outbound.test.js",
+    "test:route": "jest test/mhs-route.test.js"
   },
   "devDependencies": {
     "axios": "^0.21.1",
