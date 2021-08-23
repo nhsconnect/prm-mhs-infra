@@ -338,7 +338,7 @@ resource "aws_alb_listener" "outbound_alb_listener" {
   load_balancer_arn = aws_alb.outbound_alb.arn
   port = 443
   protocol = "HTTPS"
-  ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  ssl_policy = "ELBSecurityPolicy-TLS-1-2-Ext-2018-06"
   certificate_arn = aws_acm_certificate.mhs_outbound_cert.arn
 
   default_action {
