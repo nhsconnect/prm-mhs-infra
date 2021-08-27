@@ -92,12 +92,6 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks test
-                - exec:
-                    command: /bin/bash
-                    working_directory: prm-mhs-infra
-                    arguments:
-                      - -c
-                      - ./tasks test_route
 
   "prm-mhs-infra.test":
     group: mhs

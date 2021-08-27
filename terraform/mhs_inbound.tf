@@ -30,10 +30,6 @@ data "aws_ssm_parameter" "outbound-ca-certs" {
   name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-outbound-ca-certs"
 }
 
-data "aws_ssm_parameter" "route-ca-certs" {
-  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-route-ca-certs"
-}
-
 data "aws_secretsmanager_secret" "inbound-ca-certs" {
   name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-inbound-ca-certs"
 }
@@ -51,7 +47,6 @@ locals {
   client_cert_arn=data.aws_ssm_parameter.client-cert.arn
   client_key_arn=data.aws_ssm_parameter.client-key.arn
   outbound_ca_certs_arn=data.aws_ssm_parameter.outbound-ca-certs.arn
-  route_ca_certs_arn=data.aws_ssm_parameter.route-ca-certs.arn
   inbound_ca_certs_arn=data.aws_secretsmanager_secret.inbound-ca-certs.arn
 }
 
@@ -291,24 +286,7 @@ resource "aws_security_group" "mhs_inbound_security_group" {
 # MHS inbound tasks handle the TLS termination as they do TLS MA. This is why we
 # have to use a network load balancer here and not an application load balancer,
 # to passthrough the SSL traffic.
-resource "aws_lb" "inbound_nlb" {
-  count = var.is_public_nlb ? 0 : 1
-  name = "${var.environment}-${var.cluster_name}-mhs-inbound"
-  internal = true
-  load_balancer_type = "network"
-  enable_cross_zone_load_balancing = true
-  enable_deletion_protection = false
-  subnets = local.mhs_private_subnet_ids
-
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-inbound"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-}
-
 resource "aws_lb" "public_inbound_nlb" {
-  count = var.is_public_nlb ? 1 : 0
   name = "${var.environment}-${var.cluster_name}-mhs-inbound"
   internal = false
   load_balancer_type = "network"
@@ -335,7 +313,7 @@ resource "aws_lb" "public_inbound_nlb" {
 }
 
 resource "aws_eip" "mhs_inbound_nlb_public_ip" {
-  count = var.is_public_nlb ? 3 : 0
+  count = 3
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-inbound-public-ip"
   }
@@ -347,13 +325,12 @@ locals {
 
 # Public DNS record for the MHS inbound component
 resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
-  count = var.setup_public_dns_record == "true" ? 1 : 0
   zone_id = data.aws_ssm_parameter.environment_public_zone_id.value
   name = "in-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
   type = "A"
   ttl = 600
 
-  records = var.is_public_nlb ? local.elb_ips : aws_lb.inbound_nlb[0].subnet_mapping.*.private_ipv4_address
+  records = local.elb_ips
 }
 
 # Target group for the network load balancer for MHS inbound port 443
@@ -381,7 +358,7 @@ resource "aws_lb_target_group" "inbound_https_nlb_target_group" {
 
 # HTTPS Listener for MHS inbound load balancer that forwards requests to the correct target group
 resource "aws_lb_listener" "inbound_nlb_listener" {
-  load_balancer_arn = var.is_public_nlb ? aws_lb.public_inbound_nlb[0].arn : aws_lb.inbound_nlb[0].arn
+  load_balancer_arn = aws_lb.public_inbound_nlb.arn
   port = 443
   protocol = "TCP"
 
@@ -397,8 +374,8 @@ resource "aws_route53_record" "mhs_inbound_load_balancer_record" {
   type = "A"
 
   alias {
-    name = var.is_public_nlb ? aws_lb.public_inbound_nlb[0].dns_name : aws_lb.inbound_nlb[0].dns_name
-    zone_id = var.is_public_nlb ? aws_lb.public_inbound_nlb[0].zone_id : aws_lb.inbound_nlb[0].zone_id
+    name = aws_lb.public_inbound_nlb.dns_name
+    zone_id = aws_lb.public_inbound_nlb.zone_id
     evaluate_target_health = false
   }
 }

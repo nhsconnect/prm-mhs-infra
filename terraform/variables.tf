@@ -9,10 +9,6 @@ variable "mhs_state_table_write_capacity" {}
 variable "mhs_sync_async_table_read_capacity" {}
 variable "mhs_sync_async_table_write_capacity" {}
 
-variable "setup_public_dns_record" {
-  description = "Should be true for PTL-* environments, and false for OpenTest"
-}
-
 variable "recipient_ods_code" {
   description = "ODS code that was used for the MHS (CMA endpoint) registration"
 }
@@ -25,37 +21,7 @@ variable "mhs_inbound_service_minimum_instance_count" {
   description = "The minimum number of instances of MHS inbound to run. This will be the number of instances deployed initially."
 }
 
-variable "elasticache_node_type" {
-  description = "The type of ElastiCache node to use when deploying the ElastiCache cluster. Possible node types can be found from https://aws.amazon.com/elasticache/features/#Available_Cache_Node_Types"
-}
-
-variable "spineroutelookup_service_sds_url" {
-  description = "The SDS URL the Spine Route Lookup service should communicate with."
-}
-
-variable "spineroutelookup_service_search_base" {
-  description = "The LDAP location the Spine Route Lookup service should use as the base of its searches when querying SDS."
-}
-
-variable "spineroutelookup_service_disable_sds_tls" {
-  description = "Whether TLS should be disabled for connections to SDS."
-  default = "False"
-}
-
 variable "mhs_log_level" {}
-
-variable "mhs_route_service_minimum_instance_count" {
-  description = "The minimum number of instances of MHS route service to run. This will be the number of instances deployed initially."
-}
-
-variable "mhs_route_service_maximum_instance_count" {
-  description = "The maximum number of instances of MHS route service to run."
-}
-
-variable "route_ca_certs_arn" {
-  description = "ARN of the secrets manager secret containing the CA certificates to be used to verify the certificate presented by the Spine Route Lookup service. Required if you are using certificates that are not signed by a legitimate CA."
-  default = ""
-}
 
 variable "mhs_outbound_service_minimum_instance_count" {
   description = "The minimum number of instances of MHS outbound to run. This will be the number of instances deployed initially."
@@ -117,16 +83,10 @@ variable "spine_cidr" {
 
 variable "cluster_suffix" {}
 
-variable "sds_port" {}
-
 variable "spine_org_code" {}
 
 variable "deploy_service_to_mhs_sg" {}
 
-variable "is_public_nlb" {}
-
 variable "mhs_vpc_cidr_block" {}
 
 variable "mhs_outbound_lookup_method" {}
-
-variable "enable_sds_fhir_api" {}

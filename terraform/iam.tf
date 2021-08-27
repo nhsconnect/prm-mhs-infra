@@ -3,7 +3,7 @@ locals {
   task_role_arn = aws_iam_role.mhs.arn
   execution_role_arn = aws_iam_role.mhs-ecs.arn
 
-  resources = var.enable_sds_fhir_api ? [
+  resources = [
     data.aws_ssm_parameter.mq-app-username.arn,
     data.aws_ssm_parameter.mq-app-password.arn,
     data.aws_ssm_parameter.amqp-endpoint-0.arn,
@@ -12,23 +12,10 @@ locals {
     data.aws_ssm_parameter.client-cert.arn,
     data.aws_ssm_parameter.client-key.arn,
     data.aws_ssm_parameter.outbound-ca-certs.arn,
-    data.aws_ssm_parameter.route-ca-certs.arn,
     data.aws_ssm_parameter.dns_ip_address_0.arn,
     data.aws_ssm_parameter.dns_ip_address_1.arn,
-    data.aws_ssm_parameter.sds_api_url[0].arn,
-    data.aws_ssm_parameter.sds_api_key[0].arn
-  ] : [
-    data.aws_ssm_parameter.mq-app-username.arn,
-    data.aws_ssm_parameter.mq-app-password.arn,
-    data.aws_ssm_parameter.amqp-endpoint-0.arn,
-    data.aws_ssm_parameter.amqp-endpoint-1.arn,
-    data.aws_ssm_parameter.party-key.arn,
-    data.aws_ssm_parameter.client-cert.arn,
-    data.aws_ssm_parameter.client-key.arn,
-    data.aws_ssm_parameter.outbound-ca-certs.arn,
-    data.aws_ssm_parameter.route-ca-certs.arn,
-    data.aws_ssm_parameter.dns_ip_address_0.arn,
-    data.aws_ssm_parameter.dns_ip_address_1.arn
+    data.aws_ssm_parameter.sds_api_url.arn,
+    data.aws_ssm_parameter.sds_api_key.arn
   ]
 }
 

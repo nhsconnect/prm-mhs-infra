@@ -64,12 +64,7 @@ resource "aws_ecs_task_definition" "mhs_outbound_task" {
           value = var.mhs_resync_initial_delay
         }
       ])
-      secrets = var.route_ca_certs_arn == "" ? local.mhs_outbound_base_secrets : concat(local.mhs_outbound_base_secrets, [
-        {
-          name = "MHS_SECRET_SPINE_ROUTE_LOOKUP_CA_CERTS",
-          valueFrom = var.route_ca_certs_arn
-        }
-      ])
+      secrets = local.mhs_outbound_base_secrets
       essential = true
       logConfiguration = {
         logDriver = "awslogs"
@@ -394,10 +389,6 @@ locals {
       value = var.mhs_resynchroniser_interval
     },
     {
-      name = "MHS_SPINE_ROUTE_LOOKUP_URL"
-      value = "https://${aws_route53_record.mhs_route_load_balancer_record.name}.${data.aws_route53_zone.environment_private_zone.name}"
-    },
-    {
       name = "MHS_SPINE_ORG_CODE"
       value = local.mhs_spine_org_code
     },
@@ -423,10 +414,10 @@ locals {
     },
     {
       name = "MHS_SDS_API_URL"
-      value = var.enable_sds_fhir_api ? data.aws_ssm_parameter.sds_api_url[0].value : ""
+      value = data.aws_ssm_parameter.sds_api_url.value
     }
   ]
-  mhs_outbound_base_secrets = var.enable_sds_fhir_api ? [
+  mhs_outbound_base_secrets = [
     {
       name = "MHS_SECRET_PARTY_KEY"
       valueFrom = local.party_key_arn
@@ -445,24 +436,7 @@ locals {
     },
     {
       name = "MHS_SDS_API_KEY"
-      valueFrom = data.aws_ssm_parameter.sds_api_key[0].arn
-    }
-  ] : [
-    {
-      name = "MHS_SECRET_PARTY_KEY"
-      valueFrom = local.party_key_arn
-    },
-    {
-      name = "MHS_SECRET_CLIENT_CERT"
-      valueFrom = local.client_cert_arn
-    },
-    {
-      name = "MHS_SECRET_CLIENT_KEY"
-      valueFrom = local.client_key_arn
-    },
-    {
-      name = "MHS_SECRET_CA_CERTS"
-      valueFrom = local.outbound_ca_certs_arn
+      valueFrom = data.aws_ssm_parameter.sds_api_key.arn
     }
   ]
 }
@@ -500,21 +474,10 @@ resource "aws_acm_certificate_validation" "mhs_outbound_cert_validation" {
   validation_record_fqdns = [for record in aws_route53_record.mhs_outbound_cert_validation_record : record.fqdn]
 }
 
-resource "aws_security_group_rule" "mhs_outbound_to_mhs_route" {
-  type = "ingress"
-  protocol = "TCP"
-  from_port = 443
-  to_port = 443
-  security_group_id = aws_security_group.service_to_mhs_route.id
-  source_security_group_id = aws_security_group.outbound_ecs_tasks_sg.id
-}
-
 data "aws_ssm_parameter" "sds_api_url" {
-  count = var.enable_sds_fhir_api ? 1 : 0
   name = "/repo/${var.environment}/user-input/external/sds-fhir-url"
 }
 
 data "aws_ssm_parameter" "sds_api_key" {
-  count = var.enable_sds_fhir_api ? 1 : 0
   name = "/repo/${var.environment}/user-input/external/sds-fhir-api-key"
 }
