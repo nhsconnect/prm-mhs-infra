@@ -1,9 +1,9 @@
 export const testData = {
   dev: {
-    repoOdsCode: 'A91368',
-    repoAsid: '918999199177',
+    repoOdsCode: 'B85002',
+    repoAsid: '200000001613',
     nhsNumber: '9692842320',
-    gpOdsCode: 'G83055'
+    gpOdsCode: 'B85002'
   },
   test: {
     repoOdsCode: 'B86041',
