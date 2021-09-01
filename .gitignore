@@ -1,7 +1,6 @@
 # IntelliJ
 .idea
 
-/terraform/transit-opentest/ssh/
 /terraform/ssh/
 .terraform/
 *.tfplan
