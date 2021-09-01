@@ -7,7 +7,6 @@ mhs_sync_async_table_read_capacity = 5
 mhs_sync_async_table_write_capacity = 5
 spine_cidr = "0.0.0.0/0" # FIXME: narrow down to only the services that we talk to
 mhs_inbound_service_minimum_instance_count = 1
-recipient_ods_code                  = "C81116"
 mhs_forward_reliable_endpoint_url  = "https://msg.intspineservices.nhs.uk/reliablemessaging/reliablerequest"
 mhs_asynchronous_reliable_endpoint_url  = "https://msg.intspineservices.nhs.uk/reliablemessaging/reliablerequest"
 mhs_synchronous_endpoint_url = "https://msg.intspineservices.nhs.uk/sync-service"
