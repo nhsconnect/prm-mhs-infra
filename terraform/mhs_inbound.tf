@@ -91,14 +91,6 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
           value = aws_dynamodb_table.mhs_sync_async_table.name
         },
         {
-          name = "DNS_SERVER_1",
-          value = local.dns_ip_address_0
-        },
-        {
-          name = "DNS_SERVER_2",
-          value = local.dns_ip_address_1
-        },
-        {
           name = "MHS_INBOUND_QUEUE_BROKERS",
           value = local.inbound_queue_brokers
         },

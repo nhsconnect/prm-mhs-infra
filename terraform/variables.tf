@@ -31,16 +31,6 @@ variable "mhs_outbound_service_maximum_instance_count" {
   description = "The maximum number of instances of MHS outbound to run."
 }
 
-variable "mhs_outbound_http_proxy" {
-  description = "Address of the HTTP proxy to proxy downstream requests from MHS outbound via."
-  default = ""
-}
-
-variable "mhs_resync_initial_delay" {
-  description = "The delay before the first poll to the sync async store after receiving an acknowledgement from Spine"
-  default = 0.150
-}
-
 variable "mhs_resynchroniser_max_retries" {
   description = "The number of retry attempts to the sync-async state store that should be made whilst attempting to resynchronise a sync-async message"
 }

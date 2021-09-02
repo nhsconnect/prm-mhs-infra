@@ -12,8 +12,6 @@ locals {
     data.aws_ssm_parameter.client-cert.arn,
     data.aws_ssm_parameter.client-key.arn,
     data.aws_ssm_parameter.outbound-ca-certs.arn,
-    data.aws_ssm_parameter.dns_ip_address_0.arn,
-    data.aws_ssm_parameter.dns_ip_address_1.arn,
     data.aws_ssm_parameter.sds_api_url.arn,
     data.aws_ssm_parameter.sds_api_key.arn
   ]

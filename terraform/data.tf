@@ -22,14 +22,6 @@ data "aws_subnet_ids" "mhs_public" {
   }
 }
 
-data "aws_ssm_parameter" "dns_ip_address_0" {
-    name = "/repo/${var.environment}/output/prm-deductions-infra/${var.cluster_name}-dns-ip-0"
-}
-
-data "aws_ssm_parameter" "dns_ip_address_1" {
-    name = "/repo/${var.environment}/output/prm-deductions-infra/${var.cluster_name}-dns-ip-1"
-}
-
 data "aws_caller_identity" "current" {}
 
 data "aws_vpc_endpoint" "mhs-dynamodb" {
@@ -66,8 +58,6 @@ locals {
   mhs_vpc_id = data.aws_vpc.mhs.id
   mhs_private_subnet_ids = data.aws_subnet_ids.mhs_private.ids
   mhs_public_subnet_ids = sort(tolist(data.aws_subnet_ids.mhs_public.ids))
-  dns_ip_address_0 = data.aws_ssm_parameter.dns_ip_address_0.value
-  dns_ip_address_1 = data.aws_ssm_parameter.dns_ip_address_1.value
   mhs_dynamodb_vpc_endpoint_prefix_list_id = data.aws_vpc_endpoint.mhs-dynamodb.prefix_list_id
   mhs_s3_vpc_endpoint_prefix_list_id = data.aws_vpc_endpoint.mhs-s3.prefix_list_id
 }

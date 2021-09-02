@@ -37,33 +37,7 @@ resource "aws_ecs_task_definition" "mhs_outbound_task" {
     {
       name = "mhs-outbound"
       image = "${local.ecr_address}/mhs-outbound:${var.build_id}"
-      environment = var.mhs_outbound_http_proxy == "" ? concat(local.mhs_outbound_base_environment_vars,
-      [
-        {
-        name = "DNS_SERVER_1",
-        value = local.dns_ip_address_0
-      },
-        {
-          name = "DNS_SERVER_2",
-          value = local.dns_ip_address_1
-        }]) : concat(local.mhs_outbound_base_environment_vars, [
-        {
-          name = "DNS_SERVER_1",
-          value = local.dns_ip_address_0
-        },
-        {
-          name = "DNS_SERVER_2",
-          value = local.dns_ip_address_1
-        },
-        {
-          name = "MHS_OUTBOUND_HTTP_PROXY"
-          value = var.mhs_outbound_http_proxy
-        },
-        {
-          name = "MHS_RESYNC_INITIAL_DELAY"
-          value = var.mhs_resync_initial_delay
-        }
-      ])
+      environment = local.mhs_outbound_base_environment_vars
       secrets = local.mhs_outbound_base_secrets
       essential = true
       logConfiguration = {
