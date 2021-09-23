@@ -75,8 +75,12 @@ variable "cluster_suffix" {}
 
 variable "spine_org_code" {}
 
-variable "deploy_service_to_mhs_sg" {}
-
 variable "mhs_vpc_cidr_block" {}
 
 variable "mhs_outbound_lookup_method" {}
+
+variable "allow_vpn_to_ecs_tasks" {
+  default = false
+}
+
+variable "allow_vpn_to_mhs_outbound_lb" {}

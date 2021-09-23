@@ -1,14 +1,17 @@
 locals {
-  sgs_with_service_to_mhs_outbound = [aws_security_group.mhs_outbound_alb.id,
+  outbound_alb_sgs = var.allow_vpn_to_mhs_outbound_lb ? [
+    aws_security_group.mhs_outbound_alb.id,
     aws_security_group.alb_to_mhs_outbound_ecs.id,
     aws_security_group.service_to_mhs_outbound.id,
     aws_security_group.vpn_to_mhs_outbound.id,
-    aws_security_group.gocd_to_mhs_outbound.id]
-  sgs_without_service_to_mhs_outbound = [  aws_security_group.mhs_outbound_alb.id,
+    aws_security_group.gocd_to_mhs_outbound.id
+  ] : [
+    aws_security_group.mhs_outbound_alb.id,
     aws_security_group.alb_to_mhs_outbound_ecs.id,
-    aws_security_group.vpn_to_mhs_outbound.id,
-    aws_security_group.gocd_to_mhs_outbound.id]
-  outbound_alb_sgs = var.deploy_service_to_mhs_sg ? local.sgs_with_service_to_mhs_outbound : local.sgs_without_service_to_mhs_outbound
+    aws_security_group.service_to_mhs_outbound.id,
+    aws_security_group.gocd_to_mhs_outbound.id
+  ]
+  ecs_task_sgs = var.allow_vpn_to_ecs_tasks ? [ aws_security_group.outbound_ecs_tasks_sg.id, aws_security_group.vpn_to_mhs_outbound_ecs.id ] : [ aws_security_group.outbound_ecs_tasks_sg.id ]
 }
 
 resource "aws_ecs_cluster" "mhs_outbound_cluster" {
@@ -86,9 +89,7 @@ resource "aws_ecs_service" "mhs_outbound_service" {
 
   network_configuration {
     assign_public_ip = false
-    security_groups = [
-      aws_security_group.outbound_ecs_tasks_sg.id
-    ]
+    security_groups = local.ecs_task_sgs
     subnets = local.mhs_private_subnet_ids
   }
 
@@ -224,8 +225,7 @@ resource "aws_security_group" "service_to_mhs_outbound" {
 }
 
 resource "aws_ssm_parameter" "service_to_mhs_outbound" {
-  count = var.deploy_service_to_mhs_sg ? 1 : 0
-  name = "/repo/${var.environment}/output/${var.repo_name}/service-to-mhs-outbound-sg-id"
+  name = "/repo/${var.environment}/output/${var.repo_name}/service-to-${var.cluster_name}-mhs-outbound-sg-id"
   type = "String"
   value = aws_security_group.service_to_mhs_outbound.id
   tags = {
@@ -235,7 +235,7 @@ resource "aws_ssm_parameter" "service_to_mhs_outbound" {
 }
 
 resource "aws_security_group" "vpn_to_mhs_outbound" {
-  name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound"
+  name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound-lb"
   description = "controls access from vpn to MHS outbound"
   vpc_id      = local.mhs_vpc_id
 
@@ -248,7 +248,7 @@ resource "aws_security_group" "vpn_to_mhs_outbound" {
   }
 
   tags = {
-    Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound"
+    Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound-lb"
     CreatedBy   = var.repo_name
     Environment = var.environment
   }
@@ -269,6 +269,25 @@ resource "aws_security_group" "gocd_to_mhs_outbound" {
 
   tags = {
     Name = "${var.environment}-${var.cluster_name}-gocd-to-mhs-outbound"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group" "vpn_to_mhs_outbound_ecs" {
+  name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound-ecs"
+  description = "Controls access from vpn to mhs outbound ecs"
+  vpc_id      = local.mhs_vpc_id
+
+  ingress {
+    from_port = 3000
+    protocol = "tcp"
+    to_port = 3000
+    security_groups = [data.aws_ssm_parameter.vpn_sg_id.value]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound-ecs"
     CreatedBy   = var.repo_name
     Environment = var.environment
   }

@@ -1,39 +1,3 @@
-data "aws_ssm_parameter" "mq-app-username" {
-  name = "/repo/${var.environment}/user-input/mq-app-username"
-}
-
-data "aws_ssm_parameter" "mq-app-password" {
-  name = "/repo/${var.environment}/user-input/mq-app-password"
-}
-
-data "aws_ssm_parameter" "amqp-endpoint-0" {
-  name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-0"
-}
-
-data "aws_ssm_parameter" "amqp-endpoint-1" {
-  name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-1"
-}
-
-data "aws_ssm_parameter" "party-key" {
-  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-party-key"
-}
-
-data "aws_ssm_parameter" "client-cert" {
-  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-client-cert"
-}
-
-data "aws_ssm_parameter" "client-key" {
-  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-client-key"
-}
-
-data "aws_ssm_parameter" "outbound-ca-certs" {
-  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-outbound-ca-certs"
-}
-
-data "aws_secretsmanager_secret" "inbound-ca-certs" {
-  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-inbound-ca-certs"
-}
-
 locals {
   inbound_queue_username_arn=data.aws_ssm_parameter.mq-app-username.arn
   inbound_queue_password_arn=data.aws_ssm_parameter.mq-app-password.arn
@@ -48,6 +12,7 @@ locals {
   client_key_arn=data.aws_ssm_parameter.client-key.arn
   outbound_ca_certs_arn=data.aws_ssm_parameter.outbound-ca-certs.arn
   inbound_ca_certs_arn=data.aws_secretsmanager_secret.inbound-ca-certs.arn
+  inbound_ecs_task_sgs = var.allow_vpn_to_ecs_tasks ? [ aws_security_group.mhs_inbound_security_group.id, aws_security_group.vpn_to_mhs_inbound_ecs.id ] : [ aws_security_group.mhs_inbound_security_group.id ]
 }
 
 resource "aws_ecs_cluster" "mhs_inbound_cluster" {
@@ -181,9 +146,7 @@ resource "aws_ecs_service" "mhs_inbound_service" {
 
   network_configuration {
     assign_public_ip = false
-    security_groups = [
-      aws_security_group.mhs_inbound_security_group.id
-    ]
+    security_groups = local.inbound_ecs_task_sgs
     subnets = local.mhs_private_subnet_ids
   }
 
@@ -267,6 +230,25 @@ resource "aws_security_group" "mhs_inbound_security_group" {
     protocol = "tcp"
     cidr_blocks = [var.allowed_mhs_clients] #TODO: consider var rename
     description = "MHS-inbound egress to ActiveMQ queue servers"
+  }
+}
+
+resource "aws_security_group" "vpn_to_mhs_inbound_ecs" {
+  name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-inbound-ecs"
+  description = "Controls access from vpn to mhs inbound ecs"
+  vpc_id      = local.mhs_vpc_id
+
+  ingress {
+    from_port = 3000
+    protocol = "tcp"
+    to_port = 3000
+    security_groups = [data.aws_ssm_parameter.vpn_sg_id.value]
+  }
+
+  tags = {
+    Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-inbound-ecs"
+    CreatedBy   = var.repo_name
+    Environment = var.environment
   }
 }
 
@@ -384,4 +366,41 @@ resource "aws_security_group_rule" "inbound_mhs_to_mq" {
   to_port             = "5671"
   security_group_id = data.aws_ssm_parameter.service-to-mq-sg-id.value
   source_security_group_id = aws_security_group.mhs_inbound_security_group.id
+}
+
+
+data "aws_ssm_parameter" "mq-app-username" {
+  name = "/repo/${var.environment}/user-input/mq-app-username"
+}
+
+data "aws_ssm_parameter" "mq-app-password" {
+  name = "/repo/${var.environment}/user-input/mq-app-password"
+}
+
+data "aws_ssm_parameter" "amqp-endpoint-0" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-0"
+}
+
+data "aws_ssm_parameter" "amqp-endpoint-1" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/amqp-endpoint-1"
+}
+
+data "aws_ssm_parameter" "party-key" {
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-party-key"
+}
+
+data "aws_ssm_parameter" "client-cert" {
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-client-cert"
+}
+
+data "aws_ssm_parameter" "client-key" {
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-client-key"
+}
+
+data "aws_ssm_parameter" "outbound-ca-certs" {
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-outbound-ca-certs"
+}
+
+data "aws_secretsmanager_secret" "inbound-ca-certs" {
+  name = "/repo/${var.environment}/user-input/external/${var.cluster_name}-mhs-inbound-ca-certs"
 }
