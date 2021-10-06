@@ -118,6 +118,7 @@ resource "aws_alb" "outbound_alb" {
   subnets = local.mhs_private_subnet_ids
   security_groups = local.outbound_alb_sgs
   internal        = true
+  drop_invalid_header_fields = true
 
   tags = {
     CreatedBy   = var.repo_name
