@@ -18,6 +18,8 @@ mhs_outbound_service_minimum_instance_count = 1
 mhs_resynchroniser_max_retries="20"
 mhs_resynchroniser_interval="1"
 spine_org_code="YES"
-mhs_vpc_cidr_block = "10.239.68.0/23"
+mhs_vpc_cidr_block = "10.239.68.128/25"
 mhs_outbound_lookup_method = "SDS_API"
 allow_vpn_to_mhs_outbound_lb = true
+
+
