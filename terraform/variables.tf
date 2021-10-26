@@ -83,4 +83,6 @@ variable "allow_vpn_to_ecs_tasks" {
   default = false
 }
 
-variable "allow_vpn_to_mhs_outbound_lb" {}
+variable "allow_vpn_to_mhs_outbound_lb" {
+  default = false
+}

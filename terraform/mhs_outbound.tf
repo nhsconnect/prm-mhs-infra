@@ -11,7 +11,7 @@ locals {
     aws_security_group.service_to_mhs_outbound.id,
     aws_security_group.gocd_to_mhs_outbound.id
   ]
-  ecs_task_sgs = var.allow_vpn_to_ecs_tasks ? [ aws_security_group.outbound_ecs_tasks_sg.id, aws_security_group.vpn_to_mhs_outbound_ecs.id ] : [ aws_security_group.outbound_ecs_tasks_sg.id ]
+  ecs_task_sgs = var.allow_vpn_to_ecs_tasks ? [ aws_security_group.outbound_ecs_tasks_sg.id, aws_security_group.vpn_to_mhs_outbound_ecs[0].id ] : [ aws_security_group.outbound_ecs_tasks_sg.id ]
 }
 
 resource "aws_ecs_cluster" "mhs_outbound_cluster" {
@@ -276,6 +276,7 @@ resource "aws_security_group" "gocd_to_mhs_outbound" {
 }
 
 resource "aws_security_group" "vpn_to_mhs_outbound_ecs" {
+  count       = var.allow_vpn_to_ecs_tasks ? 1 : 0
   name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-outbound-ecs"
   description = "Controls access from vpn to mhs outbound ecs"
   vpc_id      = local.mhs_vpc_id

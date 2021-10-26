@@ -12,7 +12,7 @@ locals {
   client_key_arn=data.aws_ssm_parameter.client-key.arn
   outbound_ca_certs_arn=data.aws_ssm_parameter.outbound-ca-certs.arn
   inbound_ca_certs_arn=data.aws_secretsmanager_secret.inbound-ca-certs.arn
-  inbound_ecs_task_sgs = var.allow_vpn_to_ecs_tasks ? [ aws_security_group.mhs_inbound_security_group.id, aws_security_group.vpn_to_mhs_inbound_ecs.id ] : [ aws_security_group.mhs_inbound_security_group.id ]
+  inbound_ecs_task_sgs = var.allow_vpn_to_ecs_tasks ? [ aws_security_group.mhs_inbound_security_group.id, aws_security_group.vpn_to_mhs_inbound_ecs[0].id ] : [ aws_security_group.mhs_inbound_security_group.id ]
 }
 
 resource "aws_ecs_cluster" "mhs_inbound_cluster" {
@@ -234,6 +234,7 @@ resource "aws_security_group" "mhs_inbound_security_group" {
 }
 
 resource "aws_security_group" "vpn_to_mhs_inbound_ecs" {
+  count       = var.allow_vpn_to_ecs_tasks ? 1 : 0
   name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-inbound-ecs"
   description = "Controls access from vpn to mhs inbound ecs"
   vpc_id      = local.mhs_vpc_id
