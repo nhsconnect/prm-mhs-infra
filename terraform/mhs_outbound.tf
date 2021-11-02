@@ -411,10 +411,6 @@ locals {
       name = "MHS_SDS_API_URL"
       value = data.aws_ssm_parameter.sds_api_url.value
     },
-    {
-      name = "MHS_SPINE_ROUTE_LOOKUP_URL"
-      value = "https://dummy"
-    },
   ]
   mhs_outbound_base_secrets = [
     {
