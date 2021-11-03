@@ -151,7 +151,7 @@ pipelines:
       git:
         type: configrepo
         destination: prm-mhs-infra
-      dev_env:
+      test_env:
         pipeline: prm-mhs-infra.test
         stage: test
       mhs_docker:
@@ -162,6 +162,57 @@ pipelines:
         stage: deploy_pre_prod
     environment_variables:
       NHS_ENVIRONMENT: pre-prod
+    stages:
+      - promote_docker_image:
+          resources:
+            - docker
+          clean_workspace: true
+          tasks:
+            - exec:
+                command: /bin/bash
+                working_directory: prm-mhs-infra
+                arguments:
+                  - -c
+                  - ./tasks promote_docker_image
+      - deploy:
+          clean_workspace: true
+          jobs:
+            deploy:
+              resources:
+                - docker
+              tasks:
+                - *repo_deploy_tasks
+      - test:
+          clean_workspace: true
+          jobs:
+            test:
+              resources:
+                - docker
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    working_directory: prm-mhs-infra
+                    arguments:
+                      - -c
+                      - ./tasks test
+  "prm-mhs-infra.prod":
+    group: mhs
+    label_template: "${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+        destination: prm-mhs-infra
+      pre-prod_env:
+        pipeline: prm-mhs-infra.pre-prod
+        stage: test
+      mhs_docker:
+        pipeline: prm-repo-mhs
+        stage: build_docker
+      deductions_infra:
+        pipeline: prm-deductions-infra
+        stage: deploy_prod
+    environment_variables:
+      NHS_ENVIRONMENT: prod
     stages:
       - promote_docker_image:
           resources:
