@@ -1,6 +1,13 @@
 format_version: 4
 common:
   repo_deploy_tasks: &repo_deploy_tasks
+    - fetch:
+        pipeline: prm-repo-mhs
+        stage: build_docker
+        job: outbound
+        source: imagerc/outbound
+        destination: prm-mhs-infra/imagerc
+        is_file: true
     - exec:
         command: /bin/bash
         working_directory: prm-mhs-infra
@@ -21,6 +28,13 @@ common:
           - ./tasks wait_ecs repo
 
   test_harness_deploy_tasks: &test_harness_deploy_tasks
+    - fetch:
+        pipeline: prm-repo-mhs
+        stage: build_docker
+        job: outbound
+        source: imagerc/outbound
+        destination: prm-mhs-infra/imagerc
+        is_file: true
     - exec:
         command: /bin/bash
         working_directory: prm-mhs-infra
