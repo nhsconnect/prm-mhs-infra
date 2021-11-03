@@ -67,7 +67,7 @@ pipelines:
                 stage: build_docker
                 job: outbound
                 source: imagerc/outbound
-                destination: imagerc
+                destination: prm-mhs-infra/imagerc
                 is_file: true
             - exec:
                 command: /bin/bash
@@ -129,7 +129,7 @@ pipelines:
                 stage: build_docker
                 job: outbound
                 source: imagerc/outbound
-                destination: imagerc
+                destination: prm-mhs-infra/imagerc
                 is_file: true
             - exec:
                 command: /bin/bash
@@ -187,7 +187,7 @@ pipelines:
                 stage: build_docker
                 job: outbound
                 source: imagerc/outbound
-                destination: imagerc
+                destination: prm-mhs-infra/imagerc
                 is_file: true
             - exec:
                 command: /bin/bash
@@ -245,7 +245,7 @@ pipelines:
                 stage: build_docker
                 job: outbound
                 source: imagerc/outbound
-                destination: imagerc
+                destination: prm-mhs-infra/imagerc
                 is_file: true
             - exec:
                 command: /bin/bash
