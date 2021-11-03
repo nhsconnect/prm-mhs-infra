@@ -36,6 +36,9 @@ function set_mhs_image_tag {
       MHS_IMAGE_TAG="${KUDU_DOCKER_IMAGE_TAG}"
     else
       echo "Must set MHS_IMAGE_TAG or fetch imagerc/outbound file with docker image details"
+      echo "Current directory is $(pwd)"
+      echo "Content of the directory:"
+      ls -la
       exit 1
     fi
   fi
