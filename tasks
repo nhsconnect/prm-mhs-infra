@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
-set -Eeo pipefail
+DOCKER_OPS_VERSION="2.0.1"
+DOCKER_OPS_FILE="ops/docker-ops-${DOCKER_OPS_VERSION}"
+mkdir -p ops
+if [[ ! -f $DOCKER_OPS_FILE ]];then
+  wget --quiet -O $DOCKER_OPS_FILE https://github.com/kudulab/docker-ops/releases/download/${DOCKER_OPS_VERSION}/docker-ops
+fi
+source $DOCKER_OPS_FILE
+
+set -Eeo pipefail +u
 
 NHS_SERVICE=mhs
 AWS_REGION=eu-west-2
@@ -20,9 +28,18 @@ source $AWS_HELPERS_FILE
 
 CERTIFICATES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/mhs-certs"
 
-if [ -z "${MHS_IMAGE_TAG}" ]; then
-  MHS_IMAGE_TAG="${GO_DEPENDENCY_LABEL_MHS_DOCKER}"
-fi
+function set_mhs_image_tag {
+  if [ -z "${MHS_IMAGE_TAG}" ]; then
+    # we assume the same tag for outbound and inbound
+    if [ -f "imagerc/outbound" ]; then
+      source "imagerc/outbound"
+      MHS_IMAGE_TAG="${KUDU_DOCKER_IMAGE_TAG}"
+    else
+      echo "Must set MHS_IMAGE_TAG or fetch imagerc/outbound file with docker image details"
+      exit 1
+    fi
+  fi
+}
 
 if [ -z "${DNS_IMAGE_TAG}" ]; then
   DNS_IMAGE_TAG="${GO_DEPENDENCY_LABEL_DOCKER_DNS_IMAGES:-alpha}"
@@ -184,33 +201,40 @@ case "${command}" in
       ;;
   tf)
       check_env
+      set_mhs_image_tag
       dojo "bash"
       ;;
   _tf_plan_repo)
       check_env
+      set_mhs_image_tag
       _assume_environment_role $NHS_ENVIRONMENT
       tf_plan "$2" repo
       ;;
   _tf_plan_test_harness)
       check_env
+      set_mhs_image_tag
       _assume_environment_role $NHS_ENVIRONMENT
       tf_plan "$2" test_harness
       ;;
   tf_plan_repo)
       check_env
+      set_mhs_image_tag
       dojo "./tasks _tf_plan_repo $2 repo"
       ;;
   tf_plan_test_harness)
       check_env
+      set_mhs_image_tag
       dojo "./tasks _tf_plan_test_harness $2 test_harness"
       ;;
   _tf_apply)
       check_env
+      set_mhs_image_tag
       _assume_environment_role $NHS_ENVIRONMENT
       tf_apply
       ;;
   tf_apply)
       check_env
+      set_mhs_image_tag
       dojo "./tasks _tf_apply"
       ;;
   _csr)
@@ -226,6 +250,7 @@ case "${command}" in
       ;;
   promote_docker_image)
       check_env
+      set_mhs_image_tag
       promote_docker_image "mhs-inbound:$MHS_IMAGE_TAG" "$NHS_ENVIRONMENT"
       promote_docker_image "mhs-outbound:$MHS_IMAGE_TAG" "$NHS_ENVIRONMENT"
       ;;

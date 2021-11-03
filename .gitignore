@@ -13,4 +13,5 @@ node_modules/
 
 # Imported utilities
 /utils/*
-
+/imagerc/
+/ops/
