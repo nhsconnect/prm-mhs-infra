@@ -8,6 +8,13 @@ common:
           source: terraform/deployment.tfplan
           destination: terraform/
     tasks:
+      - fetch:
+          pipeline: prm-repo-mhs
+          stage: build_docker
+          job: outbound
+          source: imagerc/outbound
+          destination: prm-mhs-infra/imagerc
+          is_file: true
       - exec:
           command: /bin/bash
           working_directory: prm-mhs-infra
