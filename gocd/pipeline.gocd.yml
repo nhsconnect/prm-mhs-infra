@@ -39,6 +39,8 @@ common:
             - ./tasks wait_ecs repo
 
   test_harness_deploy_tasks: &test_harness_deploy_tasks
+    resources:
+      - docker
     tasks:
       - fetch:
           pipeline: prm-repo-mhs
@@ -104,19 +106,12 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo:
-              tasks: *repo_plan
+            repo: *repo_plan
       - deploy:
           clean_workspace: true
           jobs:
-            repo:
-              resources:
-                - docker
-              tasks: *repo_deploy_tasks
-            test_harness:
-              resources:
-                - docker
-              tasks: *test_harness_deploy_tasks
+            repo: *repo_deploy_tasks
+            test_harness: *test_harness_deploy_tasks
       - test:
           clean_workspace: true
           jobs:
@@ -171,12 +166,10 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo:
-              tasks: *repo_plan
+            repo: *repo_plan
       - deploy:
           clean_workspace: true
-          jobs:
-            deploy: *repo_deploy_tasks
+          jobs: *repo_deploy_tasks
       - test:
           clean_workspace: true
           jobs:
@@ -230,8 +223,7 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo:
-              tasks: *repo_plan
+            repo: *repo_plan
       - deploy:
           clean_workspace: true
           jobs:
@@ -289,8 +281,7 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo:
-              tasks: *repo_plan
+            repo: *repo_plan
       - deploy:
           approval:
             type: manual
