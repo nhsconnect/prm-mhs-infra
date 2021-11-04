@@ -125,7 +125,6 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks test
-
   "prm-mhs-infra.test":
     group: mhs
     label_template: "${git[:8]}"
@@ -169,7 +168,8 @@ pipelines:
             repo: *repo_plan
       - deploy:
           clean_workspace: true
-          jobs: *repo_deploy_tasks
+          jobs:
+            deploy: *repo_deploy_tasks
       - test:
           clean_workspace: true
           jobs:
