@@ -1,6 +1,6 @@
 format_version: 4
 common:
-  repo_plan: &repo_plan
+  plan: &plan
     resources:
       - docker
     artifacts:
@@ -15,7 +15,7 @@ common:
             - -c
             - ./tasks tf_plan_repo create
 
-  repo_deploy_tasks: &repo_deploy_tasks
+  deploy: &deploy
     resources:
       - docker
     tasks:
@@ -38,7 +38,7 @@ common:
             - -c
             - ./tasks wait_ecs repo
 
-  test_harness_deploy_tasks: &test_harness_deploy_tasks
+  test_harness_deploy: &test_harness_deploy
     resources:
       - docker
     tasks:
@@ -106,12 +106,12 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo: *repo_plan
+            plan: *plan
       - deploy:
           clean_workspace: true
           jobs:
-            repo: *repo_deploy_tasks
-            test_harness: *test_harness_deploy_tasks
+            deploy: *deploy
+            test_harness: *test_harness_deploy
       - test:
           clean_workspace: true
           jobs:
@@ -165,11 +165,11 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo: *repo_plan
+            plan: *plan
       - deploy:
           clean_workspace: true
           jobs:
-            deploy: *repo_deploy_tasks
+            deploy: *deploy
       - test:
           clean_workspace: true
           jobs:
@@ -223,11 +223,11 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo: *repo_plan
+            plan: *plan
       - deploy:
           clean_workspace: true
           jobs:
-            deploy: *repo_deploy_tasks
+            deploy: *deploy
       - test:
           clean_workspace: true
           jobs:
@@ -281,14 +281,14 @@ pipelines:
       - plan:
           clean_workspace: true
           jobs:
-            repo: *repo_plan
+            plan: *plan
       - deploy:
           approval:
             type: manual
             allow_only_on_success: true
           clean_workspace: true
           jobs:
-            deploy: *repo_deploy_tasks
+            deploy: *deploy
       - test:
           clean_workspace: true
           jobs:
