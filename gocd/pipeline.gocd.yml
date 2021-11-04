@@ -1,13 +1,28 @@
 format_version: 4
 common:
+  repo_plan: &repo_plan
+    - resources:
+        - docker
+    - artifacts:
+        - build:
+            source: terraform/deployment.tfplan
+            destination: terraform/
+    - exec:
+        command: /bin/bash
+        working_directory: prm-mhs-infra
+        arguments:
+          - -c
+          - ./tasks tf_plan_repo create
+
   repo_deploy_tasks: &repo_deploy_tasks
+    - resources:
+        - docker
     - fetch:
-        pipeline: prm-repo-mhs
-        stage: build_docker
-        job: outbound
-        source: imagerc/outbound
-        destination: prm-mhs-infra/imagerc
-        is_file: true
+        stage: plan_prod
+        job: plan
+        source: terraform/deployment.tfplan
+        destination: terraform/
+        is_file: yes
     - exec:
         command: /bin/bash
         working_directory: prm-mhs-infra
@@ -89,6 +104,11 @@ pipelines:
                 arguments:
                   - -c
                   - ./tasks promote_docker_image
+      - plan:
+          clean_workspace: true
+          jobs:
+            repo:
+              tasks: *repo_plan
       - deploy:
           clean_workspace: true
           jobs:
@@ -151,6 +171,11 @@ pipelines:
                 arguments:
                   - -c
                   - ./tasks promote_docker_image
+      - plan:
+          clean_workspace: true
+          jobs:
+            repo:
+              tasks: *repo_plan
       - deploy:
           clean_workspace: true
           jobs:
@@ -209,6 +234,11 @@ pipelines:
                 arguments:
                   - -c
                   - ./tasks promote_docker_image
+      - plan:
+          clean_workspace: true
+          jobs:
+            repo:
+              tasks: *repo_plan
       - deploy:
           clean_workspace: true
           jobs:
@@ -267,7 +297,15 @@ pipelines:
                 arguments:
                   - -c
                   - ./tasks promote_docker_image
+      - plan:
+          clean_workspace: true
+          jobs:
+            repo:
+              tasks: *repo_plan
       - deploy:
+          approval:
+            type: manual
+            allow_only_on_success: true
           clean_workspace: true
           jobs:
             deploy:

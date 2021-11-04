@@ -76,9 +76,9 @@ function tf_plan {
   tf_init
   terraform get # modules
   if [[ "${operation}" == "create" ]]; then
-    terraform plan -var build_id=$MHS_IMAGE_TAG -var-file=${NHS_ENVIRONMENT}.tfvars -var-file=${NHS_ENVIRONMENT}_${cluster_name}.tfvars -out="${NHS_ENVIRONMENT}.tfplan"
+    terraform plan -var build_id=$MHS_IMAGE_TAG -var-file=${NHS_ENVIRONMENT}.tfvars -var-file=${NHS_ENVIRONMENT}_${cluster_name}.tfvars -out="deployment.tfplan"
   elif [[ "${operation}" == "destroy" ]]; then
-    terraform plan -var build_id=$MHS_IMAGE_TAG -var-file=${NHS_ENVIRONMENT}.tfvars -var-file=${NHS_ENVIRONMENT}_${cluster_name}.tfvars -out="${NHS_ENVIRONMENT}.tfplan" -destroy
+    terraform plan -var build_id=$MHS_IMAGE_TAG -var-file=${NHS_ENVIRONMENT}.tfvars -var-file=${NHS_ENVIRONMENT}_${cluster_name}.tfvars -out="deployment.tfplan" -destroy
   else
     echo "Unknown operation (should be create or destroy), got: ${operation}"
     exit 1
@@ -88,8 +88,7 @@ function tf_plan {
 function tf_apply {
   tf_init
   terraform get # modules
-  terraform apply ${NHS_ENVIRONMENT}.tfplan
-  terraform output -json > tf-out.json
+  terraform apply deployment.tfplan
 }
 
 function check_mhs_docker_image_tag {
