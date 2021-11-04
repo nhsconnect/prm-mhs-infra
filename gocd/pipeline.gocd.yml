@@ -20,7 +20,7 @@ common:
       - docker
     tasks:
       - fetch:
-          stage: plan_prod
+          stage: plan
           job: plan
           source: terraform/deployment.tfplan
           destination: terraform/
