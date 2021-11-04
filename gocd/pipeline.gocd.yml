@@ -1,23 +1,23 @@
 format_version: 4
 common:
   repo_plan: &repo_plan
-    - resources:
-        - docker
-    - artifacts:
-        - build:
-            source: terraform/deployment.tfplan
-            destination: terraform/
-    - tasks:
-        - exec:
-            command: /bin/bash
-            working_directory: prm-mhs-infra
-            arguments:
-              - -c
-              - ./tasks tf_plan_repo create
+    resources:
+      - docker
+    artifacts:
+      - build:
+          source: terraform/deployment.tfplan
+          destination: terraform/
+    tasks:
+      - exec:
+          command: /bin/bash
+          working_directory: prm-mhs-infra
+          arguments:
+            - -c
+            - ./tasks tf_plan_repo create
 
   repo_deploy_tasks: &repo_deploy_tasks
-    - resources:
-        - docker
+    resources:
+      - docker
     tasks:
       - fetch:
           stage: plan_prod
@@ -39,31 +39,32 @@ common:
             - ./tasks wait_ecs repo
 
   test_harness_deploy_tasks: &test_harness_deploy_tasks
-    - fetch:
-        pipeline: prm-repo-mhs
-        stage: build_docker
-        job: outbound
-        source: imagerc/outbound
-        destination: prm-mhs-infra/imagerc
-        is_file: true
-    - exec:
-        command: /bin/bash
-        working_directory: prm-mhs-infra
-        arguments:
-          - -c
-          - ./tasks tf_plan_test_harness create
-    - exec:
-        command: /bin/bash
-        working_directory: prm-mhs-infra
-        arguments:
-          - -c
-          - ./tasks tf_apply
-    - exec:
-        command: /bin/bash
-        working_directory: prm-mhs-infra
-        arguments:
-          - -c
-          - ./tasks wait_ecs test_harness
+    tasks:
+      - fetch:
+          pipeline: prm-repo-mhs
+          stage: build_docker
+          job: outbound
+          source: imagerc/outbound
+          destination: prm-mhs-infra/imagerc
+          is_file: true
+      - exec:
+          command: /bin/bash
+          working_directory: prm-mhs-infra
+          arguments:
+            - -c
+            - ./tasks tf_plan_test_harness create
+      - exec:
+          command: /bin/bash
+          working_directory: prm-mhs-infra
+          arguments:
+            - -c
+            - ./tasks tf_apply
+      - exec:
+          command: /bin/bash
+          working_directory: prm-mhs-infra
+          arguments:
+            - -c
+            - ./tasks wait_ecs test_harness
 
 pipelines:
   "prm-mhs-infra.dev":
