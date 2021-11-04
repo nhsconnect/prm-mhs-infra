@@ -7,40 +7,36 @@ common:
         - build:
             source: terraform/deployment.tfplan
             destination: terraform/
-    - exec:
-        command: /bin/bash
-        working_directory: prm-mhs-infra
-        arguments:
-          - -c
-          - ./tasks tf_plan_repo create
+    - tasks:
+        - exec:
+            command: /bin/bash
+            working_directory: prm-mhs-infra
+            arguments:
+              - -c
+              - ./tasks tf_plan_repo create
 
   repo_deploy_tasks: &repo_deploy_tasks
     - resources:
         - docker
-    - fetch:
-        stage: plan_prod
-        job: plan
-        source: terraform/deployment.tfplan
-        destination: terraform/
-        is_file: yes
-    - exec:
-        command: /bin/bash
-        working_directory: prm-mhs-infra
-        arguments:
-          - -c
-          - ./tasks tf_plan_repo create
-    - exec:
-        command: /bin/bash
-        working_directory: prm-mhs-infra
-        arguments:
-          - -c
-          - ./tasks tf_apply
-    - exec:
-        command: /bin/bash
-        working_directory: prm-mhs-infra
-        arguments:
-          - -c
-          - ./tasks wait_ecs repo
+    tasks:
+      - fetch:
+          stage: plan_prod
+          job: plan
+          source: terraform/deployment.tfplan
+          destination: terraform/
+          is_file: yes
+      - exec:
+          command: /bin/bash
+          working_directory: prm-mhs-infra
+          arguments:
+            - -c
+            - ./tasks tf_apply
+      - exec:
+          command: /bin/bash
+          working_directory: prm-mhs-infra
+          arguments:
+            - -c
+            - ./tasks wait_ecs repo
 
   test_harness_deploy_tasks: &test_harness_deploy_tasks
     - fetch:
@@ -179,11 +175,7 @@ pipelines:
       - deploy:
           clean_workspace: true
           jobs:
-            deploy:
-              resources:
-                - docker
-              tasks:
-                - *repo_deploy_tasks
+            deploy: *repo_deploy_tasks
       - test:
           clean_workspace: true
           jobs:
@@ -242,11 +234,7 @@ pipelines:
       - deploy:
           clean_workspace: true
           jobs:
-            deploy:
-              resources:
-                - docker
-              tasks:
-                - *repo_deploy_tasks
+            deploy: *repo_deploy_tasks
       - test:
           clean_workspace: true
           jobs:
@@ -308,11 +296,7 @@ pipelines:
             allow_only_on_success: true
           clean_workspace: true
           jobs:
-            deploy:
-              resources:
-                - docker
-              tasks:
-                - *repo_deploy_tasks
+            deploy: *repo_deploy_tasks
       - test:
           clean_workspace: true
           jobs:
