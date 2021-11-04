@@ -5,8 +5,8 @@ common:
       - docker
     artifacts:
       - build:
-          source: terraform/deployment.tfplan
-          destination: terraform/
+          source: prm-mhs-infra/terraform/deployment.tfplan
+          destination: prm-mhs-infra/terraform/
     tasks:
       - fetch:
           pipeline: prm-repo-mhs
@@ -29,8 +29,8 @@ common:
       - fetch:
           stage: plan
           job: plan
-          source: terraform/deployment.tfplan
-          destination: terraform/
+          source: prm-mhs-infra/terraform/deployment.tfplan
+          destination: prm-mhs-infra/terraform/
           is_file: yes
       - exec:
           command: /bin/bash
