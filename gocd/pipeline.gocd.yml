@@ -27,6 +27,13 @@ common:
       - docker
     tasks:
       - fetch:
+          pipeline: prm-repo-mhs
+          stage: build_docker
+          job: outbound
+          source: imagerc/outbound
+          destination: prm-mhs-infra/imagerc
+          is_file: true
+      - fetch:
           stage: plan
           job: plan
           source: prm-mhs-infra/terraform/deployment.tfplan
