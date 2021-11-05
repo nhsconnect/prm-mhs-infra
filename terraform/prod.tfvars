@@ -6,12 +6,12 @@ mhs_state_table_write_capacity = 5
 mhs_sync_async_table_read_capacity = 5
 mhs_sync_async_table_write_capacity = 5
 mhs_inbound_service_minimum_instance_count = 1
-recipient_ods_code = "N85027"
+recipient_ods_code = "I6M8I"
 
 spine_cidr = "0.0.0.0/0" # FIXME: narrow down to only the services that we talk to
-mhs_forward_reliable_endpoint_url = "https://msg.intspineservices.nhs.uk/reliablemessaging/reliablerequest"
-mhs_asynchronous_reliable_endpoint_url  = "https://msg.intspineservices.nhs.uk/reliablemessaging/reliablerequest"
-mhs_synchronous_endpoint_url = "https://msg.intspineservices.nhs.uk/sync-service"
+mhs_forward_reliable_endpoint_url = "https://intermediate.spineservices.nhs.uk/reliablemessaging/reliablerequest"
+mhs_asynchronous_reliable_endpoint_url  = "https://intermediate.spineservices.nhs.uk/reliablemessaging/reliablerequest"
+mhs_synchronous_endpoint_url = "https://intermediate.spineservices.nhs.uk/sync-service"
 mhs_log_level = "INFO"
 mhs_outbound_service_maximum_instance_count = 2
 mhs_outbound_service_minimum_instance_count = 1
