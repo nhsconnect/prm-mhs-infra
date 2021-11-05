@@ -303,16 +303,17 @@ pipelines:
           clean_workspace: true
           jobs:
             deploy: *deploy
-      - test:
-          clean_workspace: true
-          jobs:
-            test:
-              resources:
-                - docker
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    working_directory: prm-mhs-infra
-                    arguments:
-                      - -c
-                      - ./tasks test
+#      - test:
+#          skipped: true
+#          clean_workspace: true
+#          jobs:
+#            test:
+#              resources:
+#                - docker
+#              tasks:
+#                - exec:
+#                    command: /bin/bash
+#                    working_directory: prm-mhs-infra
+#                    arguments:
+#                      - -c
+#                      - ./tasks test
