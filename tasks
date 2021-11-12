@@ -171,7 +171,7 @@ function docker_login {
 
 function configure_mhs_inbound_host_name {
   check_env
-  ods_code=$(get_aws_ssm_secret "/repo/${NHS_ENVIRONMENT}/user-input/external/gp2gp-adaptor-deductions-ods-code")
+  ods_code=$(get_aws_ssm_secret "/repo/${NHS_ENVIRONMENT}/user-input/external/repository-ods-code")
 
   if [[ "${NHS_ENVIRONMENT}" == "prod" ]]; then
     export MHS_HOST_NAME=in-${ods_code}.mhs.${NHS_ENVIRONMENT}.patient-deductions.nhs.uk
