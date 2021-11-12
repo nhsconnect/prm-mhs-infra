@@ -17,6 +17,6 @@ mhs_outbound_service_maximum_instance_count = 2
 mhs_outbound_service_minimum_instance_count = 1
 mhs_resynchroniser_max_retries = "20"
 mhs_resynchroniser_interval = "1"
-spine_org_code = "YES"
+spine_org_code = "YEA"
 mhs_vpc_cidr_block = "10.37.0.0/16"
 mhs_outbound_lookup_method = "SDS_API"
