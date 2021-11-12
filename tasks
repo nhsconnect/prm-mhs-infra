@@ -204,7 +204,10 @@ case "${command}" in
   test)
       check_env
       export NODE_EXTRA_CA_CERTS=certs/deductions.crt
-      dojo -c Dojofile-node "./tasks _test"
+      # PATCH: do not run the test in PTL-INT which has expired certs
+      if  [[ "${NHS_ENVIRONMENT}" == "prod" ]]; then
+        dojo -c Dojofile-node "./tasks _test"
+      fi
       ./tasks test_inbound
       ;;
   tf)
