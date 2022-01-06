@@ -257,7 +257,7 @@ pipelines:
                       - ./tasks test
   "prm-mhs-infra.prod":
     group: mhs
-    label_template: "${git[:8]}"
+    label_template: "${COUNT}-${git[:8]}"
     materials:
       git:
         type: configrepo
