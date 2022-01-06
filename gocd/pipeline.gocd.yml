@@ -85,7 +85,7 @@ common:
 pipelines:
   "prm-mhs-infra.dev":
     group: mhs
-    label_template: "${git[:8]}"
+    label_template: "${COUNT}-${git[:8]}"
     materials:
       git:
         type: configrepo
@@ -141,7 +141,7 @@ pipelines:
                       - ./tasks test
   "prm-mhs-infra.test":
     group: mhs
-    label_template: "${git[:8]}"
+    label_template: "${COUNT}-${git[:8]}"
     materials:
       git:
         type: configrepo
@@ -199,7 +199,7 @@ pipelines:
                       - ./tasks test
   "prm-mhs-infra.pre-prod":
     group: mhs
-    label_template: "${git[:8]}"
+    label_template: "${COUNT}-${git[:8]}"
     materials:
       git:
         type: configrepo
