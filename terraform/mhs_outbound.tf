@@ -105,12 +105,6 @@ resource "aws_ecs_service" "mhs_outbound_service" {
     aws_alb.outbound_alb
   ]
 
-  # Preserve the autoscaled instance count when this service is updated
-  lifecycle {
-    ignore_changes = [
-      desired_count
-    ]
-  }
 }
 
 resource "aws_alb" "outbound_alb" {

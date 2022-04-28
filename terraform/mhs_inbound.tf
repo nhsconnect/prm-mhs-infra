@@ -158,12 +158,6 @@ resource "aws_ecs_service" "mhs_inbound_service" {
     target_group_arn = aws_lb_target_group.inbound_https_nlb_target_group.arn
   }
 
-  # Preserve the autoscaled instance count when this service is updated
-  lifecycle {
-    ignore_changes = [
-      desired_count
-    ]
-  }
 }
 
 # MHS inbound security group
