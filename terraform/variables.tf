@@ -27,10 +27,6 @@ variable "mhs_outbound_service_minimum_instance_count" {
   description = "The minimum number of instances of MHS outbound to run. This will be the number of instances deployed initially."
 }
 
-variable "mhs_outbound_service_maximum_instance_count" {
-  description = "The maximum number of instances of MHS outbound to run."
-}
-
 variable "mhs_resynchroniser_max_retries" {
   description = "The number of retry attempts to the sync-async state store that should be made whilst attempting to resynchronise a sync-async message"
 }
