@@ -24,15 +24,6 @@ resource "aws_ecs_cluster" "mhs_outbound_cluster" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "mhs_outbound_log_group" {
-  name = "/ecs/${var.environment}-${var.cluster_name}-mhs-outbound"
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-outbound-log-group"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-}
-
 resource "aws_ecs_task_definition" "mhs_outbound_task" {
   family = "${var.environment}-${var.cluster_name}-mhs-outbound"
   container_definitions = jsonencode(

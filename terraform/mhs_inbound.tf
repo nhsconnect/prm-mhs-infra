@@ -25,15 +25,6 @@ resource "aws_ecs_cluster" "mhs_inbound_cluster" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "mhs_inbound_log_group" {
-  name = "/ecs/${var.environment}-${var.cluster_name}-mhs-inbound"
-  tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-inbound-log-group"
-    Environment = var.environment
-    CreatedBy = var.repo_name
-  }
-}
-
 # MHS inbound ECS task definition
 resource "aws_ecs_task_definition" "mhs_inbound_task" {
   family = "${var.environment}-${var.cluster_name}-mhs-inbound"
