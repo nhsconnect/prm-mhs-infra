@@ -18,6 +18,11 @@ locals {
 resource "aws_ecs_cluster" "mhs_inbound_cluster" {
   name = "${var.environment}-${var.cluster_name}-mhs-inbound-cluster"
 
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-cluster"
     Environment = var.environment
@@ -353,7 +358,6 @@ resource "aws_security_group_rule" "inbound_mhs_to_mq" {
   security_group_id = data.aws_ssm_parameter.service-to-mq-sg-id.value
   source_security_group_id = aws_security_group.mhs_inbound_security_group.id
 }
-
 
 data "aws_ssm_parameter" "mq-app-username" {
   name = "/repo/${var.environment}/user-input/mq-app-username"

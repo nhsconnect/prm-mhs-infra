@@ -17,6 +17,11 @@ locals {
 resource "aws_ecs_cluster" "mhs_outbound_cluster" {
   name = "${var.environment}-${var.cluster_name}-mhs-outbound-cluster"
 
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-outbound"
     Environment = var.environment
