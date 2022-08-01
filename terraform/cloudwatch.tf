@@ -49,43 +49,79 @@ resource "aws_cloudwatch_log_group" "mhs_outbound_log_group" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "inbound_nlb_down_errors" {
-  alarm_name                = "${var.repo_name} service down"
-  comparison_operator       = "LessThanThreshold"
-  evaluation_periods        = "1"
-  metric_name               = "HealthyHostCount"
-  namespace                 = "AWS/NetworkELB"
-  period                    = "60"
-  statistic                 = "Average"
-  threshold                 = "1"
-  alarm_description         = "This metric monitors the health of ${var.repo_name}"
-  treat_missing_data        = "breaching"
-  datapoints_to_alarm       = "1"
-  dimensions                = {
-    TargetGroup = aws_lb_target_group.inbound_https_nlb_target_group.arn_suffix
+  alarm_name          = "${var.repo_name} service down"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "HealthyHostCount"
+  namespace           = "AWS/NetworkELB"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "1"
+  alarm_description   = "This metric monitors the health of ${var.repo_name}"
+  treat_missing_data  = "breaching"
+  datapoints_to_alarm = "1"
+  dimensions          = {
+    TargetGroup  = aws_lb_target_group.inbound_https_nlb_target_group.arn_suffix
     LoadBalancer = aws_lb.public_inbound_nlb.arn_suffix
   }
-  alarm_actions             = [data.aws_sns_topic.alarm_notifications.arn]
+  alarm_actions = [data.aws_sns_topic.alarm_notifications.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "outbound_alb_down_errors" {
-  alarm_name                = "${var.repo_name} service down"
-  comparison_operator       = "LessThanThreshold"
-  evaluation_periods        = "1"
-  metric_name               = "HealthyHostCount"
-  namespace                 = "AWS/ApplicationELB"
-  period                    = "60"
-  statistic                 = "Average"
-  threshold                 = "1"
-  alarm_description         = "This metric monitors the health of ${var.repo_name}"
-  treat_missing_data        = "breaching"
-  datapoints_to_alarm       = "1"
-  dimensions                = {
-    TargetGroup = aws_lb_target_group.outbound_alb_target_group.arn_suffix
+  alarm_name          = "${var.repo_name} service down"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "HealthyHostCount"
+  namespace           = "AWS/ApplicationELB"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "1"
+  alarm_description   = "This metric monitors the health of ${var.repo_name}"
+  treat_missing_data  = "breaching"
+  datapoints_to_alarm = "1"
+  dimensions          = {
+    TargetGroup  = aws_lb_target_group.outbound_alb_target_group.arn_suffix
     LoadBalancer = aws_alb.outbound_alb.arn_suffix
   }
-  alarm_actions             = [data.aws_sns_topic.alarm_notifications.arn]
+  alarm_actions = [data.aws_sns_topic.alarm_notifications.arn]
 }
 
 data "aws_sns_topic" "alarm_notifications" {
   name = "${var.environment}-alarm-notifications-sns-topic"
+}
+
+resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_broker_1" {
+  alarm_name          = "inbound-queue-broker-1-message-processing"
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = 1800
+  evaluation_periods  = "1"
+  metric_name         = "EnqueueTime"
+  namespace           = "AWS/AmazonMQ"
+  alarm_description   = "Alarm to alert approximate time for message in the queue"
+  statistic           = "Maximum"
+  period              = 300
+  dimensions          = {
+    broker = local.inbound_queue_broker_0
+    queue  = var.inbound_queue_name
+  }
+  alarm_actions = [data.aws_sns_topic.alarm_notifications.arn]
+  ok_actions    = [data.aws_sns_topic.alarm_notifications.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_broker_2" {
+  alarm_name          = "inbound-queue-broker-2-message-processing"
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = 1800
+  evaluation_periods  = "1"
+  metric_name         = "EnqueueTime"
+  namespace           = "AWS/AmazonMQ"
+  alarm_description   = "Alarm to alert approximate time for message in the queue"
+  statistic           = "Maximum"
+  period              = 300
+  dimensions          = {
+    broker = local.inbound_queue_broker_1
+    queue  = var.inbound_queue_name
+  }
+  alarm_actions = [data.aws_sns_topic.alarm_notifications.arn]
+  ok_actions    = [data.aws_sns_topic.alarm_notifications.arn]
 }
