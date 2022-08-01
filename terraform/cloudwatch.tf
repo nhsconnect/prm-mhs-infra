@@ -91,7 +91,7 @@ data "aws_sns_topic" "alarm_notifications" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_broker_1" {
-  alarm_name          = "inbound-queue-broker-1-message-processing"
+  alarm_name          = "${var.environment}-inbound-queue-broker-1-message-processing"
   comparison_operator = "GreaterThanThreshold"
   threshold           = 1800
   evaluation_periods  = "1"
@@ -101,15 +101,15 @@ resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_brok
   statistic           = "Maximum"
   period              = 300
   dimensions          = {
-    broker = local.inbound_queue_broker_0
-    queue  = var.inbound_queue_name
+    Broker = "${data.aws_ssm_parameter.mq_broker_name.value}-1"
+    Queue  = "inbound"
   }
   alarm_actions = [data.aws_sns_topic.alarm_notifications.arn]
   ok_actions    = [data.aws_sns_topic.alarm_notifications.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_broker_2" {
-  alarm_name          = "inbound-queue-broker-2-message-processing"
+  alarm_name          = "${var.environment}-inbound-queue-broker-2-message-processing"
   comparison_operator = "GreaterThanThreshold"
   threshold           = 1800
   evaluation_periods  = "1"
@@ -119,9 +119,13 @@ resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_brok
   statistic           = "Maximum"
   period              = 300
   dimensions          = {
-    broker = local.inbound_queue_broker_1
-    queue  = var.inbound_queue_name
+    Broker = "${data.aws_ssm_parameter.mq_broker_name.value}-1"
+    Queue  = "inbound"
   }
   alarm_actions = [data.aws_sns_topic.alarm_notifications.arn]
   ok_actions    = [data.aws_sns_topic.alarm_notifications.arn]
+}
+
+data "aws_ssm_parameter" "mq_broker_name" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/broker-name"
 }
