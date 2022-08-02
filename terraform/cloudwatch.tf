@@ -93,7 +93,7 @@ data "aws_sns_topic" "alarm_notifications" {
 resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_broker_1" {
   alarm_name          = "${var.environment}-inbound-queue-broker-1-message-processing"
   comparison_operator = "GreaterThanThreshold"
-  threshold           = 1800
+  threshold           = 1800000
   evaluation_periods  = "1"
   metric_name         = "EnqueueTime"
   namespace           = "AWS/AmazonMQ"
@@ -111,7 +111,7 @@ resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_brok
 resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_broker_2" {
   alarm_name          = "${var.environment}-inbound-queue-broker-2-message-processing"
   comparison_operator = "GreaterThanThreshold"
-  threshold           = 1800
+  threshold           = 1800000
   evaluation_periods  = "1"
   metric_name         = "EnqueueTime"
   namespace           = "AWS/AmazonMQ"
