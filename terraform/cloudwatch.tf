@@ -99,7 +99,7 @@ resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_brok
   namespace           = "AWS/AmazonMQ"
   alarm_description   = "Alarm to alert approximate time for message in the queue"
   statistic           = "Maximum"
-  period              = 300
+  period              = 1800
   dimensions          = {
     Broker = "${data.aws_ssm_parameter.mq_broker_name.value}-1"
     Queue  = "inbound"
@@ -117,7 +117,7 @@ resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_brok
   namespace           = "AWS/AmazonMQ"
   alarm_description   = "Alarm to alert approximate time for message in the queue"
   statistic           = "Maximum"
-  period              = 300
+  period              = 1800
   dimensions          = {
     Broker = "${data.aws_ssm_parameter.mq_broker_name.value}-1"
     Queue  = "inbound"
