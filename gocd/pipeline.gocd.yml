@@ -197,6 +197,64 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks test
+  "prm-mhs-infra.perf":
+    group: mhs
+    label_template: "${COUNT}-${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+        destination: prm-mhs-infra
+      test_env:
+        pipeline: prm-mhs-infra.test
+        stage: test
+      mhs_docker:
+        pipeline: prm-repo-mhs
+        stage: build_docker
+      deductions_infra:
+        pipeline: prm-deductions-infra
+        stage: deploy_perf
+    environment_variables:
+      NHS_ENVIRONMENT: perf
+    stages:
+      - promote_docker_image:
+          resources:
+            - docker
+          clean_workspace: true
+          tasks:
+            - fetch:
+                pipeline: prm-repo-mhs
+                stage: build_docker
+                job: outbound
+                source: imagerc/outbound
+                destination: prm-mhs-infra/imagerc
+                is_file: true
+            - exec:
+                command: /bin/bash
+                working_directory: prm-mhs-infra
+                arguments:
+                  - -c
+                  - ./tasks promote_docker_image
+      - plan:
+          clean_workspace: true
+          jobs:
+            plan: *plan
+      - deploy:
+          clean_workspace: true
+          jobs:
+            deploy: *deploy
+      - test:
+          clean_workspace: true
+          jobs:
+            test:
+              resources:
+                - docker
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    working_directory: prm-mhs-infra
+                    arguments:
+                      - -c
+                      - ./tasks test
   "prm-mhs-infra.pre-prod":
     group: mhs
     label_template: "${COUNT}-${git[:8]}"
