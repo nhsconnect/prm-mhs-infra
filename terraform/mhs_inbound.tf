@@ -278,7 +278,7 @@ resource "aws_lb" "public_inbound_nlb" {
 }
 
 resource "aws_eip" "mhs_inbound_nlb_public_ip" {
-  count = 3
+  count = var.environment == "perf" ? 1 : 3
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-inbound-public-ip"
   }
