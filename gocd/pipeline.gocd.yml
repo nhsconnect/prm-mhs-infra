@@ -242,19 +242,6 @@ pipelines:
           clean_workspace: true
           jobs:
             deploy: *deploy
-      - test:
-          clean_workspace: true
-          jobs:
-            test:
-              resources:
-                - docker
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    working_directory: prm-mhs-infra
-                    arguments:
-                      - -c
-                      - ./tasks test
   "prm-mhs-infra.pre-prod":
     group: mhs
     label_template: "${COUNT}-${git[:8]}"
