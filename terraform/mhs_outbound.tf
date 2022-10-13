@@ -109,6 +109,7 @@ resource "aws_alb" "outbound_alb" {
   security_groups = local.outbound_alb_sgs
   internal        = true
   drop_invalid_header_fields = true
+  enable_deletion_protection = true
 
   tags = {
     CreatedBy   = var.repo_name

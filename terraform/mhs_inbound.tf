@@ -256,7 +256,7 @@ resource "aws_lb" "public_inbound_nlb" {
   internal = false
   load_balancer_type = "network"
   enable_cross_zone_load_balancing = true
-  enable_deletion_protection = false
+  enable_deletion_protection = true
   subnet_mapping {
     subnet_id     = local.mhs_public_subnet_ids[0]
     allocation_id = aws_eip.mhs_inbound_nlb_public_ip[0].id
