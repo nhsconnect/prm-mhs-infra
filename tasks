@@ -232,6 +232,11 @@ case "${command}" in
       set_mhs_image_tag
       dojo "./tasks _tf_plan_repo $2 repo"
       ;;
+  tf_plan_repo_shell)
+      check_env
+      set_mhs_image_tag
+      dojo
+      ;;
   tf_plan_test_harness)
       check_env
       set_mhs_image_tag

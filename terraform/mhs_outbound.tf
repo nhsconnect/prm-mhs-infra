@@ -402,6 +402,10 @@ locals {
       name = "MHS_SDS_API_URL"
       value = data.aws_ssm_parameter.sds_api_url.value
     },
+    {
+      name = "SUPPORTED_FILE_TYPES"
+      value = file("${path.root}/data/supported-ehr-attachment-types.txt")
+    }
   ]
   mhs_outbound_base_secrets = [
     {
