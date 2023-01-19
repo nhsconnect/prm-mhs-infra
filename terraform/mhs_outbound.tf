@@ -404,7 +404,7 @@ locals {
     },
     {
       name = "SUPPORTED_FILE_TYPES"
-      value = file("${path.root}/data/supported-ehr-attachment-types.txt")
+      value = file("${path.root}/data/supported-ehr-attachment-types")
     }
   ]
   mhs_outbound_base_secrets = [

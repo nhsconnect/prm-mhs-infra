@@ -61,7 +61,7 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
         },
         {
           name = "SUPPORTED_FILE_TYPES"
-          value = file("${path.root}/data/supported-ehr-attachment-types.txt")
+          value = file("${path.root}/data/supported-ehr-attachment-types")
         }
       ]
       secrets = [
