@@ -103,6 +103,10 @@ resource "aws_ecs_service" "mhs_outbound_service" {
 
 }
 
+data "aws_ssm_parameter" "alb_access_logs_bucket" {
+  name = "/repo/${var.environment}/output/prm-deductions-infra/alb-access-logs-s3-bucket-id"
+}
+
 resource "aws_alb" "outbound_alb" {
   name = "${var.environment}-${var.cluster_name}-mhs-out-alb"
   subnets = local.mhs_private_subnet_ids
@@ -110,6 +114,12 @@ resource "aws_alb" "outbound_alb" {
   internal        = true
   drop_invalid_header_fields = true
   enable_deletion_protection = true
+
+  access_logs {
+    bucket = data.aws_ssm_parameter.alb_access_logs_bucket.value
+    enabled = true
+    prefix = "mhs-outbound"
+  }
 
   tags = {
     CreatedBy   = var.repo_name
