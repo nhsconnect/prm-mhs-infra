@@ -4,7 +4,7 @@ resource "aws_dynamodb_table" "mhs_state_table" {
   hash_key                    = "key"
   read_capacity               = var.mhs_state_table_read_capacity
   write_capacity              = var.mhs_state_table_write_capacity
-  deletion_protection_enabled = true
+#  deletion_protection_enabled = true
 
   point_in_time_recovery {
     enabled = true
