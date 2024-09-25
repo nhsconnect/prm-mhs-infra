@@ -10,7 +10,7 @@ common:
     tasks:
       - fetch:
           pipeline: prm-repo-mhs
-          stage: build_docker
+          stage: import_docker
           job: outbound
           source: imagerc/outbound
           destination: prm-mhs-infra/imagerc
@@ -28,7 +28,7 @@ common:
     tasks:
       - fetch:
           pipeline: prm-repo-mhs
-          stage: build_docker
+          stage: import_docker
           job: outbound
           source: imagerc/outbound
           destination: prm-mhs-infra/imagerc
@@ -58,7 +58,7 @@ common:
     tasks:
       - fetch:
           pipeline: prm-repo-mhs
-          stage: build_docker
+          stage: import_docker
           job: outbound
           source: imagerc/outbound
           destination: prm-mhs-infra/imagerc
@@ -92,7 +92,7 @@ pipelines:
         destination: prm-mhs-infra
       mhs_docker:
         pipeline: prm-repo-mhs
-        stage: build_docker
+        stage: import_docker
       deductions_infra:
         pipeline: prm-deductions-infra
         stage: deploy_dev
@@ -106,7 +106,7 @@ pipelines:
           tasks:
             - fetch:
                 pipeline: prm-repo-mhs
-                stage: build_docker
+                stage: import_docker
                 job: outbound
                 source: imagerc/outbound
                 destination: prm-mhs-infra/imagerc
@@ -151,7 +151,7 @@ pipelines:
         stage: test
       mhs_docker:
         pipeline: prm-repo-mhs
-        stage: build_docker
+        stage: import_docker
       deductions_infra:
         pipeline: prm-deductions-infra
         stage: deploy_test
@@ -165,7 +165,7 @@ pipelines:
           tasks:
             - fetch:
                 pipeline: prm-repo-mhs
-                stage: build_docker
+                stage: import_docker
                 job: outbound
                 source: imagerc/outbound
                 destination: prm-mhs-infra/imagerc
@@ -209,7 +209,7 @@ pipelines:
         stage: test
       mhs_docker:
         pipeline: prm-repo-mhs
-        stage: build_docker
+        stage: import_docker
       deductions_infra:
         pipeline: prm-deductions-infra
         stage: deploy_perf
@@ -223,7 +223,7 @@ pipelines:
           tasks:
             - fetch:
                 pipeline: prm-repo-mhs
-                stage: build_docker
+                stage: import_docker
                 job: outbound
                 source: imagerc/outbound
                 destination: prm-mhs-infra/imagerc
@@ -254,7 +254,7 @@ pipelines:
         stage: test
       mhs_docker:
         pipeline: prm-repo-mhs
-        stage: build_docker
+        stage: import_docker
       deductions_infra:
         pipeline: prm-deductions-infra
         stage: deploy_pre_prod
@@ -268,7 +268,7 @@ pipelines:
           tasks:
             - fetch:
                 pipeline: prm-repo-mhs
-                stage: build_docker
+                stage: import_docker
                 job: outbound
                 source: imagerc/outbound
                 destination: prm-mhs-infra/imagerc
@@ -312,7 +312,7 @@ pipelines:
         stage: test
       mhs_docker:
         pipeline: prm-repo-mhs
-        stage: build_docker
+        stage: import_docker
       deductions_infra:
         pipeline: prm-deductions-infra
         stage: deploy_prod
@@ -326,7 +326,7 @@ pipelines:
           tasks:
             - fetch:
                 pipeline: prm-repo-mhs
-                stage: build_docker
+                stage: import_docker
                 job: outbound
                 source: imagerc/outbound
                 destination: prm-mhs-infra/imagerc
