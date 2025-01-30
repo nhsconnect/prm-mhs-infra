@@ -7,3 +7,9 @@ updates:
       timezone: "Europe/London"
       time: "09:00"
     open-pull-requests-limit: 100
+  - package-ecosystem: "github-actions" 
+    directory: "/" 
+    schedule: 
+      interval: "weekly" 
+      timezone: "Europe/London" 
+      time: "09:00"
