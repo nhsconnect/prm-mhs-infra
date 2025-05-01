@@ -20,3 +20,4 @@ spine_org_code                              = "YES"
 mhs_vpc_cidr_block                          = "10.239.68.0/23"
 mhs_outbound_lookup_method                  = "SDS_API"
 allow_vpn_to_mhs_outbound_lb                = true
+cluster_suffix                              = "mhs"
