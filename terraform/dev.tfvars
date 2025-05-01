@@ -17,3 +17,4 @@ mhs_resynchroniser_interval                 = "1"
 spine_org_code                              = "YES"
 mhs_outbound_lookup_method                  = "SDS_API"
 allow_vpn_to_mhs_outbound_lb                = true
+cluster_suffix                              = "mhs"
