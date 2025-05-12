@@ -60,7 +60,7 @@ resource "aws_cloudwatch_metric_alarm" "inbound_nlb_down_errors" {
   alarm_description   = "This metric monitors the health of ${var.repo_name}"
   treat_missing_data  = "breaching"
   datapoints_to_alarm = "1"
-  dimensions = {
+  dimensions          = {
     TargetGroup  = aws_lb_target_group.inbound_https_nlb_target_group.arn_suffix
     LoadBalancer = aws_lb.public_inbound_nlb.arn_suffix
   }
@@ -79,7 +79,7 @@ resource "aws_cloudwatch_metric_alarm" "outbound_alb_down_errors" {
   alarm_description   = "This metric monitors the health of ${var.repo_name}"
   treat_missing_data  = "breaching"
   datapoints_to_alarm = "1"
-  dimensions = {
+  dimensions          = {
     TargetGroup  = aws_lb_target_group.outbound_alb_target_group.arn_suffix
     LoadBalancer = aws_alb.outbound_alb.arn_suffix
   }
@@ -100,7 +100,7 @@ resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_brok
   alarm_description   = "Alarm to alert approximate time for message in the queue"
   statistic           = "Maximum"
   period              = 1800
-  dimensions = {
+  dimensions          = {
     Broker = "${data.aws_ssm_parameter.mq_broker_name.value}-1"
     Queue  = "inbound"
   }
@@ -111,14 +111,14 @@ resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_brok
 resource "aws_cloudwatch_metric_alarm" "approx_active_mq_message_processing_broker_2" {
   alarm_name          = "${var.environment}-inbound-queue-broker-2-message-processing"
   comparison_operator = "GreaterThanThreshold"
-  threshold           = 0
+  threshold           =  0
   evaluation_periods  = "1"
   metric_name         = "QueueSize"
   namespace           = "AWS/AmazonMQ"
   alarm_description   = "Alarm to alert approximate time for message in the queue"
   statistic           = "Maximum"
   period              = 1800
-  dimensions = {
+  dimensions          = {
     Broker = "${data.aws_ssm_parameter.mq_broker_name.value}-1"
     Queue  = "inbound"
   }
