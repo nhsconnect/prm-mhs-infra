@@ -274,6 +274,12 @@ resource "aws_lb" "public_inbound_nlb" {
     allocation_id = aws_eip.mhs_inbound_nlb_public_ip[2].id
   }
 
+  access_logs {
+    bucket = data.aws_ssm_parameter.alb_access_logs_bucket.value
+    enabled = true
+    prefix = "mhs-inbound"
+  }
+
   tags = {
     Name = "${var.environment}-${var.cluster_name}-mhs-inbound"
     Environment = var.environment
