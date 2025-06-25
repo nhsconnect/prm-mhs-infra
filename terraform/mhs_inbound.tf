@@ -1,18 +1,18 @@
 locals {
-  inbound_queue_username_arn=data.aws_ssm_parameter.mq-app-username.arn
-  inbound_queue_password_arn=data.aws_ssm_parameter.mq-app-password.arn
-  inbound_queue_broker_0=replace(data.aws_ssm_parameter.amqp-endpoint-0.value, "amqp+ssl", "amqps")
-  inbound_queue_broker_1=replace(data.aws_ssm_parameter.amqp-endpoint-1.value, "amqp+ssl", "amqps")
-  inbound_queue_brokers="${local.inbound_queue_broker_0},${local.inbound_queue_broker_1}"
-  domain_suffix = "${var.environment}-${var.recipient_ods_code}"
+  inbound_queue_username_arn = data.aws_ssm_parameter.mq-app-username.arn
+  inbound_queue_password_arn = data.aws_ssm_parameter.mq-app-password.arn
+  inbound_queue_broker_0     = replace(data.aws_ssm_parameter.amqp-endpoint-0.value, "amqp+ssl", "amqps")
+  inbound_queue_broker_1     = replace(data.aws_ssm_parameter.amqp-endpoint-1.value, "amqp+ssl", "amqps")
+  inbound_queue_brokers      = "${local.inbound_queue_broker_0},${local.inbound_queue_broker_1}"
+  domain_suffix              = "${var.environment}-${var.recipient_ods_code}"
 
   # MHS secrets to connect with spine
-  party_key_arn=data.aws_ssm_parameter.party-key.arn
-  client_cert_arn=data.aws_ssm_parameter.client-cert.arn
-  client_key_arn=data.aws_ssm_parameter.client-key.arn
-  outbound_ca_certs_arn=data.aws_ssm_parameter.outbound-ca-certs.arn
-  inbound_ca_certs_arn=data.aws_secretsmanager_secret.inbound-ca-certs.arn
-  inbound_ecs_task_sgs = var.allow_vpn_to_ecs_tasks ? [ aws_security_group.mhs_inbound_security_group.id, aws_security_group.vpn_to_mhs_inbound_ecs[0].id ] : [ aws_security_group.mhs_inbound_security_group.id ]
+  party_key_arn         = data.aws_ssm_parameter.party-key.arn
+  client_cert_arn       = data.aws_ssm_parameter.client-cert.arn
+  client_key_arn        = data.aws_ssm_parameter.client-key.arn
+  outbound_ca_certs_arn = data.aws_ssm_parameter.outbound-ca-certs.arn
+  inbound_ca_certs_arn  = data.aws_secretsmanager_secret.inbound-ca-certs.arn
+  inbound_ecs_task_sgs  = var.allow_vpn_to_ecs_tasks ? [aws_security_group.mhs_inbound_security_group.id, aws_security_group.vpn_to_mhs_inbound_ecs[0].id] : [aws_security_group.mhs_inbound_security_group.id]
 }
 
 resource "aws_ecs_cluster" "mhs_inbound_cluster" {
@@ -24,9 +24,9 @@ resource "aws_ecs_cluster" "mhs_inbound_cluster" {
   }
 
   tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-cluster"
+    Name        = "${var.environment}-${var.cluster_name}-mhs-cluster"
     Environment = var.environment
-    CreatedBy = var.repo_name
+    CreatedBy   = var.repo_name
   }
 }
 
@@ -99,63 +99,62 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
           awslogs-region = var.region
           awslogs-stream-prefix = var.build_id
         }
+        portMappings = [
+          # Port 443 is the port for inbound requests from Spine
+          {
+            containerPort = 443
+            hostPort      = 443
+            protocol      = "tcp"
+          },
+          # Port 80 is the port for healthcheck requests from the MHS inbound load balancer
+          {
+            containerPort = 80
+            hostPort      = 80
+            protocol      = "tcp"
+          }
+        ]
       }
-      portMappings = [
-        # Port 443 is the port for inbound requests from Spine
-        {
-          containerPort = 443
-          hostPort = 443
-          protocol = "tcp"
-        },
-        # Port 80 is the port for healthcheck requests from the MHS inbound load balancer
-        {
-          containerPort = 80
-          hostPort = 80
-          protocol = "tcp"
-        }
-      ]
-    }
-  ]
+    ]
   )
-  cpu = "512"
-  memory = "1024"
+  cpu          = "512"
+  memory       = "1024"
   network_mode = "awsvpc"
   requires_compatibilities = [
     "FARGATE"
   ]
   tags = {
-    Name = "${var.environment}-mhs-inbound-task"
+    Name        = "${var.environment}-mhs-inbound-task"
     Environment = var.environment
-    CreatedBy = var.repo_name
+    CreatedBy   = var.repo_name
   }
-  task_role_arn = local.task_role_arn
+  task_role_arn      = local.task_role_arn
   execution_role_arn = local.execution_role_arn
 }
 
 # MHS inbound service that runs multiple of the MHS outbound task definition
 # defined above
 resource "aws_ecs_service" "mhs_inbound_service" {
-  name = "${var.environment}-${var.cluster_name}-mhs-inbound"
-  cluster = aws_ecs_cluster.mhs_inbound_cluster.id
-  deployment_maximum_percent = 200
+  name                               = "${var.environment}-${var.cluster_name}-mhs-inbound"
+  cluster                            = aws_ecs_cluster.mhs_inbound_cluster.id
+  deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
-  desired_count = var.mhs_inbound_service_minimum_instance_count
-  launch_type = "FARGATE"
-  platform_version = "1.3.0"
-  scheduling_strategy = "REPLICA"
-  task_definition = aws_ecs_task_definition.mhs_inbound_task.arn
+  desired_count                      = var.mhs_inbound_service_minimum_instance_count
+  launch_type                        = "FARGATE"
+  platform_version                   = "1.3.0"
+  scheduling_strategy                = "REPLICA"
+  task_definition                    = aws_ecs_task_definition.mhs_inbound_task.arn
 
   network_configuration {
     assign_public_ip = false
-    security_groups = local.inbound_ecs_task_sgs
-    subnets = local.mhs_private_subnet_ids
+    security_groups  = local.inbound_ecs_task_sgs
+    subnets          = local.mhs_private_subnet_ids
   }
 
   load_balancer {
     # In the MHS inbound task definition, we define only 1 container, and for that container, we expose 2 ports.
     # The first of these ports is 443, the port that we want to expose as it handles inbound requests from Spine.
-    container_name = jsondecode(aws_ecs_task_definition.mhs_inbound_task.container_definitions)[0].name
-    container_port = 443
+    container_name   = jsondecode(aws_ecs_task_definition.mhs_inbound_task.container_definitions)[0].name
+    container_port   = 443
     target_group_arn = aws_lb_target_group.inbound_https_nlb_target_group.arn
   }
 
@@ -163,47 +162,47 @@ resource "aws_ecs_service" "mhs_inbound_service" {
 
 # MHS inbound security group
 resource "aws_security_group" "mhs_inbound_security_group" {
-  name = "${var.environment}-mhs-inbound-sg"
+  name        = "${var.environment}-mhs-inbound-sg"
   description = "The security group used to control traffic for the MHS Inbound component."
-  vpc_id = local.mhs_vpc_id
+  vpc_id      = local.mhs_vpc_id
 
   tags = {
-    Name = "${var.environment}-mhs-inbound-sg"
+    Name        = "${var.environment}-mhs-inbound-sg"
     Environment = var.environment
-    CreatedBy = var.repo_name
+    CreatedBy   = var.repo_name
   }
 
   # We're allowing inbound requests from the private subnets as MHS inbound load balancer
   # can't have a security group for us to reference.
 
   ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = [local.mhs_vpc_cidr_block]
     description = "Allow HTTPS inbound requests from MHS inbound load balancer"
   }
 
   ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = [local.mhs_vpc_cidr_block]
     description = "Allow HTTP inbound requests from MHS inbound load balancer"
   }
 
   egress {
-    from_port = 53
-    to_port = 53
-    protocol = "udp"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
     cidr_blocks = [local.mhs_vpc_cidr_block]
     description = "MHS-inbound egress to DNS"
   }
 
   egress {
     from_port = 443
-    to_port = 443
-    protocol = "tcp"
+    to_port   = 443
+    protocol  = "tcp"
     prefix_list_ids = [
       local.mhs_dynamodb_vpc_endpoint_prefix_list_id,
       local.mhs_s3_vpc_endpoint_prefix_list_id
@@ -212,17 +211,17 @@ resource "aws_security_group" "mhs_inbound_security_group" {
   }
 
   egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = [local.mhs_vpc_cidr_block]
     description = "MHS-inbound egress to MHS VPC. (Interface type VPC endpoints)"
   }
 
   egress {
-    from_port = 5671
-    to_port = 5671
-    protocol = "tcp"
+    from_port   = 5671
+    to_port     = 5671
+    protocol    = "tcp"
     cidr_blocks = [var.allowed_mhs_clients] #TODO: consider var rename
     description = "MHS-inbound egress to ActiveMQ queue servers"
   }
@@ -235,14 +234,14 @@ resource "aws_security_group" "vpn_to_mhs_inbound_ecs" {
   vpc_id      = local.mhs_vpc_id
 
   ingress {
-    from_port = 3000
-    protocol = "tcp"
-    to_port = 3000
+    from_port       = 3000
+    protocol        = "tcp"
+    to_port         = 3000
     security_groups = [data.aws_ssm_parameter.vpn_sg_id.value]
   }
 
   tags = {
-    Name = "${var.environment}-${var.cluster_name}-vpn-to-mhs-inbound-ecs"
+    Name        = "${var.environment}-${var.cluster_name}-vpn-to-mhs-inbound-ecs"
     CreatedBy   = var.repo_name
     Environment = var.environment
   }
@@ -257,11 +256,11 @@ resource "aws_security_group" "vpn_to_mhs_inbound_ecs" {
 # have to use a network load balancer here and not an application load balancer,
 # to passthrough the SSL traffic.
 resource "aws_lb" "public_inbound_nlb" {
-  name = "${var.environment}-${var.cluster_name}-mhs-inbound"
-  internal = false
-  load_balancer_type = "network"
+  name                             = "${var.environment}-${var.cluster_name}-mhs-inbound"
+  internal                         = false
+  load_balancer_type               = "network"
   enable_cross_zone_load_balancing = true
-  enable_deletion_protection = true
+  enable_deletion_protection       = true
   subnet_mapping {
     subnet_id     = local.mhs_public_subnet_ids[0]
     allocation_id = aws_eip.mhs_inbound_nlb_public_ip[0].id
@@ -276,15 +275,15 @@ resource "aws_lb" "public_inbound_nlb" {
   }
 
   access_logs {
-    bucket = data.aws_ssm_parameter.alb_access_logs_bucket.value
+    bucket  = data.aws_ssm_parameter.alb_access_logs_bucket.value
     enabled = true
-    prefix = "mhs-inbound"
+    prefix  = "mhs-inbound"
   }
 
   tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-inbound"
+    Name        = "${var.environment}-${var.cluster_name}-mhs-inbound"
     Environment = var.environment
-    CreatedBy = var.repo_name
+    CreatedBy   = var.repo_name
   }
 }
 
@@ -302,9 +301,9 @@ locals {
 # Public DNS record for the MHS inbound component
 resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
   zone_id = data.aws_ssm_parameter.environment_public_zone_id.value
-  name = "in-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
-  type = "A"
-  ttl = 600
+  name    = "in-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
+  type    = "A"
+  ttl     = 600
 
   records = local.elb_ips
 }
@@ -312,46 +311,46 @@ resource "aws_route53_record" "public_mhs_inbound_load_balancer_record" {
 # Target group for the network load balancer for MHS inbound port 443
 # The MHS inbound ECS service registers it's tasks here.
 resource "aws_lb_target_group" "inbound_https_nlb_target_group" {
-  name = "${var.environment}-${var.cluster_name}-mhs-in-https" # "name" cannot be longer than 32 characters
-  port = 443
-  protocol = "TCP"
-  target_type = "ip"
-  vpc_id = local.mhs_vpc_id
+  name                 = "${var.environment}-${var.cluster_name}-mhs-in-https" # "name" cannot be longer than 32 characters
+  port                 = 443
+  protocol             = "TCP"
+  target_type          = "ip"
+  vpc_id               = local.mhs_vpc_id
   deregistration_delay = var.deregistration_delay
 
   health_check {
     protocol = "HTTP"
-    port = 80
-    path = "/healthcheck"
+    port     = 80
+    path     = "/healthcheck"
   }
 
   tags = {
-    Name = "${var.environment}-${var.cluster_name}-mhs-inbound-https"
+    Name        = "${var.environment}-${var.cluster_name}-mhs-inbound-https"
     Environment = var.environment
-    CreatedBy = var.repo_name
+    CreatedBy   = var.repo_name
   }
 }
 
 # HTTPS Listener for MHS inbound load balancer that forwards requests to the correct target group
 resource "aws_lb_listener" "inbound_nlb_listener" {
   load_balancer_arn = aws_lb.public_inbound_nlb.arn
-  port = 443
-  protocol = "TCP"
+  port              = 443
+  protocol          = "TCP"
 
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.inbound_https_nlb_target_group.arn
   }
 }
 
 resource "aws_route53_record" "mhs_inbound_load_balancer_record" {
   zone_id = data.aws_ssm_parameter.environment_private_zone_id.value
-  name = "in-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
-  type = "A"
+  name    = "in-${lower(var.recipient_ods_code)}.${var.cluster_suffix}"
+  type    = "A"
 
   alias {
-    name = aws_lb.public_inbound_nlb.dns_name
-    zone_id = aws_lb.public_inbound_nlb.zone_id
+    name                   = aws_lb.public_inbound_nlb.dns_name
+    zone_id                = aws_lb.public_inbound_nlb.zone_id
     evaluate_target_health = false
   }
 }
@@ -361,12 +360,12 @@ data "aws_ssm_parameter" "service-to-mq-sg-id" {
 }
 
 resource "aws_security_group_rule" "inbound_mhs_to_mq" {
-  type                = "ingress"
-  description         = "Access to queues from MHS inbound"
-  protocol            = "tcp"
-  from_port           = "5671"
-  to_port             = "5671"
-  security_group_id = data.aws_ssm_parameter.service-to-mq-sg-id.value
+  type                     = "ingress"
+  description              = "Access to queues from MHS inbound"
+  protocol                 = "tcp"
+  from_port                = "5671"
+  to_port                  = "5671"
+  security_group_id        = data.aws_ssm_parameter.service-to-mq-sg-id.value
   source_security_group_id = aws_security_group.mhs_inbound_security_group.id
 }
 
