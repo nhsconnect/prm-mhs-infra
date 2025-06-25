@@ -1,6 +1,6 @@
 locals {
   # IAM for ECS tasks:
-  task_role_arn = aws_iam_role.mhs.arn
+  task_role_arn      = aws_iam_role.mhs.arn
   execution_role_arn = aws_iam_role.mhs-ecs.arn
 
   resources = [
@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "mhs-ecs-assume-role-policy" {
     actions = ["sts:AssumeRole"]
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "ecs-tasks.amazonaws.com"
       ]
@@ -35,7 +35,7 @@ resource "aws_iam_role" "mhs-ecs" {
   assume_role_policy = data.aws_iam_policy_document.mhs-ecs-assume-role-policy.json
   tags = {
     Environment = var.environment
-    CreatedBy = var.repo_name
+    CreatedBy   = var.repo_name
   }
 }
 
@@ -130,7 +130,7 @@ data "aws_iam_policy_document" "ecs-assume-role-policy" {
     actions = ["sts:AssumeRole"]
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "ecs.amazonaws.com",
         "ecs-tasks.amazonaws.com"
@@ -144,7 +144,7 @@ resource "aws_iam_role" "mhs" {
   assume_role_policy = data.aws_iam_policy_document.ecs-assume-role-policy.json
   tags = {
     Environment = var.environment
-    CreatedBy = var.repo_name
+    CreatedBy   = var.repo_name
   }
 }
 

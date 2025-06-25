@@ -1,2 +1,2 @@
-cluster_name = "repo"
+cluster_name   = "repo"
 cluster_suffix = "mhs"
