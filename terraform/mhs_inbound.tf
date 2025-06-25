@@ -34,85 +34,86 @@ resource "aws_ecs_cluster" "mhs_inbound_cluster" {
 resource "aws_ecs_task_definition" "mhs_inbound_task" {
   family = "${var.environment}-${var.cluster_name}-mhs-inbound"
   container_definitions = jsonencode(
-  [
-    {
-      name = "mhs-inbound"
-      image = "${local.ecr_address}/mhs-inbound:${var.build_id}"
-      environment = [
-        {
-          name = "MHS_LOG_LEVEL"
-          value = var.mhs_log_level
-        },
-        {
-          name = "MHS_STATE_TABLE_NAME"
-          value = aws_dynamodb_table.mhs_state_table.name
-        },
-        {
-          name = "MHS_SYNC_ASYNC_STATE_TABLE_NAME"
-          value = aws_dynamodb_table.mhs_sync_async_table.name
-        },
-        {
-          name = "MHS_INBOUND_QUEUE_BROKERS",
-          value = local.inbound_queue_brokers
-        },
-        {
-          name = "MHS_INBOUND_QUEUE_NAME",
-          value = var.inbound_queue_name
-        },
-        {
-          name = "SUPPORTED_FILE_TYPES"
-          value = file("${path.root}/data/supported-ehr-attachment-types")
-        }
-      ]
-      secrets = [
-        {
-          name = "MHS_SECRET_INBOUND_QUEUE_USERNAME"
-          valueFrom = local.inbound_queue_username_arn
-        },
-        {
-          name = "MHS_SECRET_INBOUND_QUEUE_PASSWORD"
-          valueFrom = local.inbound_queue_password_arn
-        },
-        {
-          name = "MHS_SECRET_PARTY_KEY"
-          valueFrom = local.party_key_arn
-        },
-        {
-          name = "MHS_SECRET_CLIENT_CERT"
-          valueFrom = local.client_cert_arn
-        },
-        {
-          name = "MHS_SECRET_CLIENT_KEY"
-          valueFrom = local.client_key_arn
-        },
-        {
-          name = "MHS_SECRET_CA_CERTS"
-          valueFrom = local.inbound_ca_certs_arn
-        }
-      ]
-      essential = true
-      readonlyRootFilesystem = true
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group = aws_cloudwatch_log_group.mhs_inbound_log_group.name
-          awslogs-region = var.region
-          awslogs-stream-prefix = var.build_id
-        }
-        portMappings = [
-          # Port 443 is the port for inbound requests from Spine
+    [
+      {
+        name  = "mhs-inbound"
+        image = "${local.ecr_address}/mhs-inbound:${var.build_id}"
+        environment = [
           {
-            containerPort = 443
-            hostPort      = 443
-            protocol      = "tcp"
+            name  = "MHS_LOG_LEVEL"
+            value = var.mhs_log_level
           },
-          # Port 80 is the port for healthcheck requests from the MHS inbound load balancer
           {
-            containerPort = 80
-            hostPort      = 80
-            protocol      = "tcp"
+            name  = "MHS_STATE_TABLE_NAME"
+            value = aws_dynamodb_table.mhs_state_table.name
+          },
+          {
+            name  = "MHS_SYNC_ASYNC_STATE_TABLE_NAME"
+            value = aws_dynamodb_table.mhs_sync_async_table.name
+          },
+          {
+            name  = "MHS_INBOUND_QUEUE_BROKERS",
+            value = local.inbound_queue_brokers
+          },
+          {
+            name  = "MHS_INBOUND_QUEUE_NAME",
+            value = var.inbound_queue_name
+          },
+          {
+            name  = "SUPPORTED_FILE_TYPES"
+            value = file("${path.root}/data/supported-ehr-attachment-types")
           }
         ]
+        secrets = [
+          {
+            name      = "MHS_SECRET_INBOUND_QUEUE_USERNAME"
+            valueFrom = local.inbound_queue_username_arn
+          },
+          {
+            name      = "MHS_SECRET_INBOUND_QUEUE_PASSWORD"
+            valueFrom = local.inbound_queue_password_arn
+          },
+          {
+            name      = "MHS_SECRET_PARTY_KEY"
+            valueFrom = local.party_key_arn
+          },
+          {
+            name      = "MHS_SECRET_CLIENT_CERT"
+            valueFrom = local.client_cert_arn
+          },
+          {
+            name      = "MHS_SECRET_CLIENT_KEY"
+            valueFrom = local.client_key_arn
+          },
+          {
+            name      = "MHS_SECRET_CA_CERTS"
+            valueFrom = local.inbound_ca_certs_arn
+          }
+        ]
+        essential              = true
+        readonlyRootFilesystem = true
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            awslogs-group         = aws_cloudwatch_log_group.mhs_inbound_log_group.name
+            awslogs-region        = var.region
+            awslogs-stream-prefix = var.build_id
+          }
+          portMappings = [
+            # Port 443 is the port for inbound requests from Spine
+            {
+              containerPort = 443
+              hostPort      = 443
+              protocol      = "tcp"
+            },
+            # Port 80 is the port for healthcheck requests from the MHS inbound load balancer
+            {
+              containerPort = 80
+              hostPort      = 80
+              protocol      = "tcp"
+            }
+          ]
+        }
       }
     ]
   )

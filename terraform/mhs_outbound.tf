@@ -32,30 +32,30 @@ resource "aws_ecs_cluster" "mhs_outbound_cluster" {
 resource "aws_ecs_task_definition" "mhs_outbound_task" {
   family = "${var.environment}-${var.cluster_name}-mhs-outbound"
   container_definitions = jsonencode(
-  [
-    {
-      name = "mhs-outbound"
-      image = "${local.ecr_address}/mhs-outbound:${var.build_id}"
-      environment = local.mhs_outbound_base_environment_vars
-      secrets = local.mhs_outbound_base_secrets
-      essential = true
-      readonlyRootFilesystem = true
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group = aws_cloudwatch_log_group.mhs_outbound_log_group.name
-          awslogs-region = var.region
-          awslogs-stream-prefix = var.build_id
-        }
-        portMappings = [
-          {
-            containerPort = 80
-            hostPort      = 80
-            protocol      = "tcp"
+    [
+      {
+        name                   = "mhs-outbound"
+        image                  = "${local.ecr_address}/mhs-outbound:${var.build_id}"
+        environment            = local.mhs_outbound_base_environment_vars
+        secrets                = local.mhs_outbound_base_secrets
+        essential              = true
+        readonlyRootFilesystem = true
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            awslogs-group         = aws_cloudwatch_log_group.mhs_outbound_log_group.name
+            awslogs-region        = var.region
+            awslogs-stream-prefix = var.build_id
           }
-        ]
+          portMappings = [
+            {
+              containerPort = 80
+              hostPort      = 80
+              protocol      = "tcp"
+            }
+          ]
+        }
       }
-    }
     ]
   )
   cpu          = "512"
