@@ -35,7 +35,7 @@ jobs:
   plan:
     strategy:
       matrix:
-          environment: [dev, test, pre-prod, prod]
+        environment: [dev, test, pre-prod, prod]
     name: Terraform Plan (${{ matrix.environment }})
     runs-on: ubuntu-latest
     environment: ${{ matrix.environment }}
