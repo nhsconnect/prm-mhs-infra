@@ -1,30 +1,28 @@
-## When copying this to a new ORC repository...
-##
-## 1) Visit https://github.com/nhsconnect/<repo>/settings/environments and create environments:
-## - dev
-## - test
-## - test-apply
-## - pre-prod
-## - pre-prod-apply
-## - prod
-## - prod-apply
-##
-## 2) For each environment, add the following secrets:
-## - IAM_ROLE
-## - TF_BACKEND_BUCKET
-## - TF_BACKEND_DYNAMODB_TABLE
-## - TF_BACKEND_KEY
-##
-## 3) Create the following repository secret (https://github.com/nhsconnect/<repo>/settings/secrets/actions):
-## - ECR_REPOSITORY_NAME
-##
-## 4) Edit the ## REPOSITORY SPECIFIC ## section below.
-
-name: PR Checks
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      environment:
+        description: "Which Environment settings to use"
+        required: true
+        type: string
+        default: "prod"
+      is_deployment:
+        description: "Do you want to run Terraform Apply"
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which Environment settings to use"
+        required: true
+        type: string
+        default: "prod"
+      is_deployment:
+        description: "Do you want to run Terraform Apply"
+        type: boolean
+        default: false
+
+name: Base Plan and Apply
 
 permissions:
   contents: read       
@@ -33,12 +31,9 @@ permissions:
 
 jobs:
   plan:
-    strategy:
-      matrix:
-          environment: [dev, test, pre-prod, prod]
-    name: Terraform Plan (${{ matrix.environment }})
+    name: Terraform Plan and Apply
     runs-on: ubuntu-latest
-    environment: ${{ matrix.environment }}
+    environment: ${{ inputs.environment }}  # Need to add a condition so if its not dev and is a deployment, it will append -apply for write permissions
     defaults:
       run:
         working-directory: ./terraform
@@ -157,3 +152,12 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
+
+        # - name: terraform apply
+        #   if: inputs.is_deployment
+        #     id: plan
+        #     run: |
+        #         terraform plan -var-file="${{ inputs.environment == 'dev' ? inputs.environment : inputs.environment + '-apply' }}.tfvars" -no-color -out=tfplan
+        #         terraform show -no-color tfplan > tfplan.txt
+        #         echo "summary=$(grep -E 'Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.|No changes\. Your infrastructure matches the configuration\.' tfplan.txt | sed 's/.*No changes\. Your infrastructure matches the configuration/Plan: no changes/g' | sed 's/.*Plan: //g' | sed 's/\..*//g')" >> $GITHUB_OUTPUT
+        #     continue-on-error: true

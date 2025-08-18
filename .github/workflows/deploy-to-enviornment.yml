@@ -1,0 +1,39 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Which Environment settings to use"
+        required: true
+        type: string
+        default: "prod"
+      is_deployment:
+        description: "Do you want to run Terraform Apply"
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which Environment settings to use"
+        required: true
+        type: string
+        default: "prod"
+      is_deployment:
+        description: "Do you want to run Terraform Apply"
+        type: boolean
+        default: false
+
+name:  Plan or Apply
+
+permissions:
+  pull-requests: write
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
+jobs:
+  mhs-plan-or-deploy:
+    uses: ./.github/workflows/base-deployment.yml
+    with:
+      environment: ${{ inputs.environment }}
+      is_deployment: ${{ inputs.is_deployment }}
+    secrets: inherit
+     
