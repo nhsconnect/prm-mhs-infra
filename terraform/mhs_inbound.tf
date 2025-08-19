@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
     [
       {
         name  = "mhs-inbound"
-        image = "${local.ecr_address}/mhs-inbound:${var.build_id}"
+        image = "nhsdev/nia-mhs-inbound:${inputs.build_id}"
         environment = [
           {
             name  = "MHS_LOG_LEVEL"

@@ -21,6 +21,10 @@ on:
         description: "Do you want to run Terraform Apply"
         type: boolean
         default: false
+      build_id:
+        description: "Which docker image tag to use"
+        type: number
+        default: 2.0.1
 
 name: Base Plan and Apply
 
