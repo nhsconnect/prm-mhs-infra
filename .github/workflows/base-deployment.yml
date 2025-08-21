@@ -86,12 +86,11 @@ jobs:
     - name: terraform plan
       id: plan
       run: |
-        terraform plan -var-file="${{ inputs.environment }}.tfvars" -no-color -out=tfplan
-        terraform show -no-color tfplan > tfplan.txt
+        terraform plan -var-file="${{ inputs.environment }}.tfvars" -no-color -out=${{ inputs.environment }}.tfplan
 
     - name: terraform apply
       if: ${{ inputs.is_deployment }}
       id: apply
       run: |
-       terraform apply -auto-approve -input=false ${{ inputs.environment }}.tfvars
+       terraform apply -auto-approve -input=false ${{ inputs.environment }}.tfplan
       working-directory: ./terraform
