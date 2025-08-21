@@ -18,5 +18,5 @@ jobs:
       with:
         environment: dev
         is_deployment: ${{ github.ref == 'refs/heads/main' }}
-        build_id: 2.0.1
+        build_id: "2.0.1"
       secrets: inherit

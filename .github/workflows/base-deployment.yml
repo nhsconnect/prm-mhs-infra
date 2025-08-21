@@ -12,8 +12,8 @@ on:
         default: false
       build_id:
         description: "Which docker image version to use (e.g 2.0.1)"
-        type: number
-        default: 2.0.1
+        type: string
+        default: "2.0.1"
 
   workflow_dispatch:
     inputs:
@@ -31,8 +31,8 @@ on:
         default: false
       build_id:
         description: "Which docker image tag to use"
-        type: number
-        default: 2.0.1
+        type: string
+        default: "2.0.1"
 
 name: Base Plan and Apply
 
