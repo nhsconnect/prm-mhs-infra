@@ -80,7 +80,7 @@ jobs:
       id: vars
       run: |-
         cat > pipeline.auto.tfvars <<EOF
-        build_id = ${{inputs.build_id}}
+        build_id = "${{inputs.build_id}}"
         EOF
 
     - name: terraform plan
