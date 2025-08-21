@@ -94,4 +94,4 @@ jobs:
       id: apply
       run: |
        terraform apply -auto-approve -input=false ${{ inputs.environment }}.tfplan
-      working-directory: ./stacks/gp-registrations-mi/terraform
+      working-directory: ./terraform
