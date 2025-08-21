@@ -93,5 +93,5 @@ jobs:
       if: ${{ inputs.is_deployment }}
       id: apply
       run: |
-       terraform apply -auto-approve -input=false ${{ inputs.environment }}.tfplan
+       terraform apply -auto-approve -input=false ${{ inputs.environment }}.tfvars
       working-directory: ./terraform
