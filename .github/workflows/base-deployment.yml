@@ -15,12 +15,19 @@ on:
       environment:
         description: "Which Environment settings to use"
         required: true
-        type: string
-        default: "prod"
+        type: choice
+        options: 
+          - dev 
+          - pre-prod
+          - prod
       is_deployment:
         description: "Do you want to run Terraform Apply"
         type: boolean
         default: false
+      build_id:
+        description: "Which docker image tag to use"
+        type: number
+        default: 2.0.1
 
 name: Base Plan and Apply
 
@@ -33,7 +40,7 @@ jobs:
   plan:
     name: Terraform Plan and Apply
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}  # Need to add a condition so if its not dev and is a deployment, it will append -apply for write permissions
+    environment: ${{  inputs.environment == 'dev' && 'dev' || inputs.is_deployment && format('{0}-apply.tfvars', inputs.environment) || inputs.environment  }} 
     defaults:
       run:
         working-directory: ./terraform
@@ -67,97 +74,19 @@ jobs:
     - name: Setup Terraform variables
       id: vars
       run: |-
-        IMAGE_TAG=$(aws ecr describe-images --repository-name ${{ secrets.ECR_REPOSITORY_NAME }} --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]')
         cat > pipeline.auto.tfvars <<EOF
-        build_id = $IMAGE_TAG
+        build_id = ${{inputs.build_id}}
         EOF
 
     - name: terraform plan
       id: plan
       run: |
-        terraform plan -var-file="${{ matrix.environment }}.tfvars" -no-color -out=tfplan
+        terraform plan -var-file="${{ inputs.environment }}.tfvars" -no-color -out=tfplan
         terraform show -no-color tfplan > tfplan.txt
-        echo "summary=$(grep -E 'Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.|No changes\. Your infrastructure matches the configuration\.' tfplan.txt | sed 's/.*No changes\. Your infrastructure matches the configuration/Plan: no changes/g' | sed 's/.*Plan: //g' | sed 's/\..*//g')" >> $GITHUB_OUTPUT
-      continue-on-error: true
 
-    - name: Add PR comment
-      uses: actions/github-script@v7
-      if: github.event_name == 'pull_request'
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          // 1. Retrieve existing bot comments for the PR
-          const { data: comments } = await github.rest.issues.listComments({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-          })
-          const botComment = comments.find(comment => {
-            return comment.user.type === 'Bot' && comment.body.includes('Report for environment: ${{ matrix.environment }}')
-          })
-
-          // 2. Prepare format of the comment
-          const output = `### Report for environment: ${{ matrix.environment }}
-          
-          #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-          <details><summary>Format Output</summary>
-
-          \`\`\`\n
-          ${{ steps.fmt.outputs.stdout }}
-          \`\`\`
-
-          </details>
-          
-          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-          <details><summary>Initialization Output</summary>
-
-          \`\`\`\n
-          ${{ steps.init.outputs.stdout }}
-          \`\`\`
-
-          </details>
-
-          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-          <details><summary>Validation Output</summary>
-
-          \`\`\`\n
-          ${{ steps.validate.outputs.stdout }}
-          \`\`\`
-
-          </details>
-
-          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-
-          <details><summary>Show Plan (${{ steps.plan.outputs.summary }})</summary>
-
-          \`\`\`\n
-          ${{ steps.plan.outputs.stdout }}
-          \`\`\`
-
-          </details>`;
-
-          // 3. If we have a comment, update it, otherwise create a new one
-          if (botComment) {
-            github.rest.issues.deleteComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: botComment.id,
-              body: output
-            })
-          }
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
-
-        # - name: terraform apply
-        #   if: inputs.is_deployment
-        #     id: plan
-        #     run: |
-        #         terraform plan -var-file="${{ inputs.environment == 'dev' ? inputs.environment : inputs.environment + '-apply' }}.tfvars" -no-color -out=tfplan
-        #         terraform show -no-color tfplan > tfplan.txt
-        #         echo "summary=$(grep -E 'Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.|No changes\. Your infrastructure matches the configuration\.' tfplan.txt | sed 's/.*No changes\. Your infrastructure matches the configuration/Plan: no changes/g' | sed 's/.*Plan: //g' | sed 's/\..*//g')" >> $GITHUB_OUTPUT
-        #     continue-on-error: true
+    - name: terraform apply
+      if: ${{ inputs.is_deployment }}
+      id: apply
+      run: |
+       terraform apply -auto-approve -input=false ${{ inputs.environment }}.tfplan
+      working-directory: ./stacks/gp-registrations-mi/terraform
