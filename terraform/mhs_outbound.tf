@@ -34,12 +34,11 @@ resource "aws_ecs_task_definition" "mhs_outbound_task" {
   container_definitions = jsonencode(
     [
       {
-        name                   = "mhs-outbound"
-        image                  = "nhsdev/nia-mhs-outbound:${var.build_id}"
-        environment            = local.mhs_outbound_base_environment_vars
-        secrets                = local.mhs_outbound_base_secrets
-        essential              = true
-        readonlyRootFilesystem = true
+        name        = "mhs-outbound"
+        image       = "nhsdev/nia-mhs-outbound:${var.build_id}"
+        environment = local.mhs_outbound_base_environment_vars
+        secrets     = local.mhs_outbound_base_secrets
+        essential   = true
         logConfiguration = {
           logDriver = "awslogs"
           options = {
@@ -205,6 +204,14 @@ resource "aws_security_group" "outbound_ecs_tasks_sg" {
     protocol    = "tcp"
     cidr_blocks = [local.mhs_vpc_cidr_block]
     description = "MHS outbound egress to MHS VPC"
+  }
+
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow outbound HTTPS traffic to the public Internet to pull Docker image from Docker Hub"
   }
 
   tags = {
