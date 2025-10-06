@@ -206,14 +206,6 @@ resource "aws_security_group" "outbound_ecs_tasks_sg" {
     description = "MHS outbound egress to MHS VPC"
   }
 
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow outbound HTTPS traffic to the public Internet to pull Docker image from Docker Hub"
-  }
-
   tags = {
     Name        = "${var.environment}-${var.cluster_name}-mhs-out-ecs-tasks-sg"
     CreatedBy   = var.repo_name
