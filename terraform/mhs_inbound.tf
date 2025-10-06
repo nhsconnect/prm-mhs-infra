@@ -220,14 +220,6 @@ resource "aws_security_group" "mhs_inbound_security_group" {
   }
 
   egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow outbound HTTPS traffic to the public Internet to pull Docker image from Docker Hub"
-  }
-
-  egress {
     from_port   = 5671
     to_port     = 5671
     protocol    = "tcp"
