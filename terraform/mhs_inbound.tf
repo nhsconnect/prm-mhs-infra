@@ -90,8 +90,7 @@ resource "aws_ecs_task_definition" "mhs_inbound_task" {
             valueFrom = local.inbound_ca_certs_arn
           }
         ]
-        essential              = true
-        readonlyRootFilesystem = true
+        essential = true
         logConfiguration = {
           logDriver = "awslogs"
           options = {
